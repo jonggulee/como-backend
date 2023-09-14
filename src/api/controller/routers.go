@@ -17,14 +17,13 @@ type Route struct {
 type Routes []Route
 
 func Index(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Hello, Ggomo\n\n"))
+	w.Write([]byte("Hello, COMO\n\n"))
 }
 
 func NewRouter() *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
 	for _, route := range routes {
-		var handler http.Handler
-		handler = route.HandlerFunc
+		handler := route.HandlerFunc
 
 		router.
 			Methods(route.Method).
@@ -42,39 +41,16 @@ var routes = Routes{
 		"/",
 		Index,
 	},
-
 	Route{
 		"LoginKakaoAuthUrlGet",
 		strings.ToUpper("GET"),
 		"/v1/user/login/kakao/authurl",
 		LoginKakaoAuthUrlGet,
 	},
-
 	Route{
 		"LoginKakaoGet",
 		strings.ToUpper("GET"),
 		"/v1/user/login/kakao",
 		LoginKakaoGet,
 	},
-
-	// Route{
-	// 	"SignupUserPost",
-	// 	strings.ToUpper("POST"),
-	// 	"/v1/user/signup",
-	// 	SignupUserPost,
-	// },
-
-	// Route{
-	// 	"SignupUserGet",
-	// 	strings.ToUpper("GET"),
-	// 	"/v1/user/signup",
-	// 	SignupUserGet,
-	// },
-
-	// Route{
-	// 	"SingupTokenPost",
-	// 	strings.ToUpper("Post"),
-	// 	"/v1/user/signup/token",
-	// 	SingupTokenPost,
-	// },
 }

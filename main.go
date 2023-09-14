@@ -28,7 +28,7 @@ func main() {
 
 func startupMessage() {
 	fmt.Println("==================================================")
-	fmt.Println("                GGOMO API SERVER")
+	fmt.Println("                COMO API SERVER")
 	fmt.Println("==================================================")
 	fmt.Printf("Server is starting...\n\n")
 	fmt.Printf("Version:		%s\n", "v0.1")
