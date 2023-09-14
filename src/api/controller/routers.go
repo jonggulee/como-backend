@@ -44,9 +44,37 @@ var routes = Routes{
 	},
 
 	Route{
-		"SignupUserPost",
-		strings.ToUpper("Post"),
-		"/v1/user/signup",
-		SignupUserPost,
+		"LoginKakaoAuthUrlGet",
+		strings.ToUpper("GET"),
+		"/v1/user/login/kakao/authurl",
+		LoginKakaoAuthUrlGet,
 	},
+
+	Route{
+		"LoginKakaoGet",
+		strings.ToUpper("GET"),
+		"/v1/user/login/kakao",
+		LoginKakaoGet,
+	},
+
+	// Route{
+	// 	"SignupUserPost",
+	// 	strings.ToUpper("POST"),
+	// 	"/v1/user/signup",
+	// 	SignupUserPost,
+	// },
+
+	// Route{
+	// 	"SignupUserGet",
+	// 	strings.ToUpper("GET"),
+	// 	"/v1/user/signup",
+	// 	SignupUserGet,
+	// },
+
+	// Route{
+	// 	"SingupTokenPost",
+	// 	strings.ToUpper("Post"),
+	// 	"/v1/user/signup/token",
+	// 	SingupTokenPost,
+	// },
 }
