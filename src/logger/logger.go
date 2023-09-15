@@ -25,6 +25,15 @@ func init() {
 	Logger.SetLevel(logrus.DebugLevel)
 }
 
+func Errorf(reqId string, format string, v ...interface{}) {
+	loggerWithField := Logger.WithFields(logrus.Fields{})
+	loggerWithField.Data["file"] = fileInfo(2)
+	if reqId != "" {
+		loggerWithField.Data["requestId"] = reqId
+	}
+	loggerWithField.Errorf(format, v...)
+}
+
 func Debugf(reqId string, format string, v ...interface{}) {
 	loggerWithField := Logger.WithFields(logrus.Fields{})
 	loggerWithField.Data["file"] = fileInfo(2)
