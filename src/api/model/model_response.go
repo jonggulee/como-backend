@@ -5,6 +5,6 @@ type Response struct {
 	StatusMessage string `json:"statusMessage,omitempty"`
 	StatusCode    int    `json:"statusCode,omitempty"`
 
-	KakaoToken   *Token `json:"loginToken,omitempty"`
-	KakaoAuthUrl string `json:"kakaoAuthUrl,omitempty"`
+	KakaoToken   *KakaoToken `json:"kakaoToken,omitempty"`
+	KakaoAuthUrl string      `json:"kakaoAuthUrl,omitempty"`
 }

@@ -69,7 +69,7 @@ func getRequestId(w http.ResponseWriter, r *http.Request) string {
 func writeResponse(reqId string, w http.ResponseWriter, response *model.Response) error {
 	err := json.NewEncoder(w).Encode(response)
 	if err != nil {
-		logger.Debugf(reqId, "Failed to write response", err)
+		logger.Errorf(reqId, "Failed to write response", err)
 		return err
 	}
 	return nil

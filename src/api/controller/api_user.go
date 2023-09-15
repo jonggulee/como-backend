@@ -3,11 +3,7 @@ package controller
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"encoding/json"
-	"fmt"
-	"io"
 	"net/http"
-	"net/url"
 
 	"github.com/gorilla/sessions"
 	"github.com/jonggulee/go-login.git/src/api/model"
@@ -21,7 +17,6 @@ import (
 var (
 	oauthConf *oauth2.Config
 	store     = sessions.NewCookieStore([]byte("secret"))
-	// sessionStore = sessions.NewCookieStore[any](sessions.DebugCookieConfig, []byte(sessionSecret), nil)
 )
 
 type KakaoTokenResponse struct {
@@ -79,16 +74,15 @@ func KakaoTokenGet(w http.ResponseWriter, r *http.Request) {
 
 	// 쿠키에 저장된 state 값 불러오기
 	authSession, _ := store.Get(r, "authSession")
-	state := authSession.Values["state"]
-	fmt.Println("state: ", state)
-	if state == nil {
-		logger.Debugf(reqId, "state is %s", state)
+	s := authSession.Values["state"]
+	if s == nil {
+		logger.Debugf(reqId, "state is %s", s)
 		resp := newResponse(w, reqId, 400, "Bad Request")
 		writeResponse(reqId, w, resp)
 		return
 	}
-	if state != r.URL.Query().Get("state") {
-		logger.Debugf(reqId, "state is %s", state)
+	if s != r.URL.Query().Get("state") {
+		logger.Debugf(reqId, "state is %s", s)
 		resp := newResponse(w, reqId, 403, "Forbidden")
 		writeResponse(reqId, w, resp)
 		return
@@ -100,57 +94,25 @@ func KakaoTokenGet(w http.ResponseWriter, r *http.Request) {
 	}
 	authSession.Save(r, w)
 
-	// Get Kakao Auth Code
+	// 인가 코드 받기
 	c := r.URL.Query().Get("code")
 
-	data := url.Values{
-		"grant_type":    {"authorization_code"},
-		"client_id":     {oauthConf.ClientID},
-		"redirect_uri":  {oauthConf.RedirectURL},
-		"code":          {c},
-		"client_secret": {oauthConf.ClientSecret},
-	}
-
-	// 아래 코드 수정 필요
-	// fmt.Println(conf.Endpoint.TokenURL)
-	resp, err := http.PostForm(oauthConf.Endpoint.TokenURL, data)
+	ctx := r.Context()
+	token, err := oauthConf.Exchange(ctx, c)
 	if err != nil {
-		fmt.Println("Error while posting:", err)
-		return
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("Error while reading response:", err)
+		logger.Errorf(reqId, "Failed to get token", err)
+		resp := newResponse(w, reqId, 500, "Internal Server Error")
+		writeResponse(reqId, w, resp)
 		return
 	}
 
-	fmt.Println(string(body))
+	kakaoToken := &model.KakaoToken{}
+	kakaoToken.TokenType = token.TokenType
+	kakaoToken.Token = token.AccessToken
+	kakaoToken.RefreshToken = token.RefreshToken
+	kakaoToken.Expiry = token.Expiry
 
-	// Unmarshal the JSON response into a KakaoTokenResponse struct
-	var tokenResponse KakaoTokenResponse
-	err = json.Unmarshal(body, &tokenResponse)
-	if err != nil {
-		fmt.Println("Error while unmarshalling:", err)
-		return
-	}
-
-	loginToken := &model.Token{}
-	loginToken.Token = tokenResponse.AccessToken
-
-	// resp = newOkResponse(w, reqId, constants.BASICOK)
-
-	// resp :=
-
-	// writeResponse(reqId, w, &model.Response{LoginToken: loginToken})
-
-	// fmt.Println("test==============", loginToken.Token)
-
-	// Output the token information
-	// fmt.Printf("Access Token: %s\n", tokenResponse.AccessToken)
-	// fmt.Printf("Expires In: %d\n", tokenResponse.ExpiresIn)
-	// fmt.Printf("Refresh Token: %s\n", tokenResponse.RefreshToken)
-	// fmt.Printf("Scope: %s\n", tokenResponse.Scope)
-	// fmt.Printf("Token Type: %s\n", tokenResponse.TokenType)
+	resp := newOkResponse(w, reqId, constants.BASICOK)
+	resp.KakaoToken = kakaoToken
+	writeResponse(reqId, w, resp)
 }
