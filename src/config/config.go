@@ -15,6 +15,6 @@ type AuthSession struct {
 }
 
 var KakaoAuthSession = AuthSession{
-	Path:   "/v1/user/login/kakao",
+	Path:   "/v1/user/login/kakao/token",
 	MaxAge: 300,
 }

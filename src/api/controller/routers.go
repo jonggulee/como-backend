@@ -50,7 +50,7 @@ var routes = Routes{
 	Route{
 		"LoginKakaoGet",
 		strings.ToUpper("GET"),
-		"/v1/user/login/kakao",
+		"/v1/user/login/kakao/token",
 		KakaoTokenGet,
 	},
 }

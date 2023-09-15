@@ -19,14 +19,6 @@ var (
 	store     = sessions.NewCookieStore([]byte("secret"))
 )
 
-type KakaoTokenResponse struct {
-	AccessToken  string `json:"access_token"`
-	ExpiresIn    int    `json:"expires_in"`
-	RefreshToken string `json:"refresh_token"`
-	Scope        string `json:"scope"`
-	TokenType    string `json:"token_type"`
-}
-
 const (
 	localServer = "http://localhost:8080"
 )
@@ -36,7 +28,7 @@ func ReadKakaoConfig(cfg *config.Config) {
 		ClientID:     config.AppCtx.Cfg.KakaoClientId,
 		ClientSecret: config.AppCtx.Cfg.KakaoClientSecret,
 
-		RedirectURL: localServer + "/v1/user/login/kakao",
+		RedirectURL: localServer + config.KakaoAuthSession.Path,
 		Endpoint:    kakao.Endpoint,
 	}
 }
