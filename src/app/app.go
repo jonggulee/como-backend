@@ -38,8 +38,6 @@ func RunFunc(ctx *cli.Context) error {
 
 	printConfig(cfg)
 
-	// controller.Config(cfg.KakaoClientId, cfg.KakaoClientSecret)
-
 	controller.ReadKakaoConfig(cfg)
 
 	router := controller.NewRouter()

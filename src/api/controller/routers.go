@@ -45,12 +45,12 @@ var routes = Routes{
 		"LoginKakaoAuthUrlGet",
 		strings.ToUpper("GET"),
 		"/v1/user/login/kakao/authurl",
-		LoginKakaoAuthUrlGet,
+		KakaoAuthUrlGet,
 	},
 	Route{
 		"LoginKakaoGet",
 		strings.ToUpper("GET"),
 		"/v1/user/login/kakao",
-		LoginKakaoGet,
+		KakaoTokenGet,
 	},
 }

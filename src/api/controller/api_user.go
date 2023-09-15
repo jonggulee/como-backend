@@ -10,33 +10,19 @@ import (
 	"net/url"
 
 	"github.com/gorilla/sessions"
+	"github.com/jonggulee/go-login.git/src/api/model"
 	"github.com/jonggulee/go-login.git/src/config"
+	"github.com/jonggulee/go-login.git/src/constants"
 	"github.com/jonggulee/go-login.git/src/logger"
 	"golang.org/x/oauth2"
-)
-
-const (
-	localServer = "http://localhost:8080"
-	authKakao   = "https://kauth.kakao.com"
+	"golang.org/x/oauth2/kakao"
 )
 
 var (
-	oAuthConf *oauth2.Config
+	oauthConf *oauth2.Config
 	store     = sessions.NewCookieStore([]byte("secret"))
+	// sessionStore = sessions.NewCookieStore[any](sessions.DebugCookieConfig, []byte(sessionSecret), nil)
 )
-
-func ReadKakaoConfig(cfg *config.Config) {
-	oAuthConf = &oauth2.Config{
-		ClientID:     config.AppCtx.Cfg.KakaoClientId,
-		ClientSecret: config.AppCtx.Cfg.KakaoClientSecret,
-
-		RedirectURL: localServer + "/v1/user/login/kakao",
-		Endpoint: oauth2.Endpoint{
-			AuthURL:  authKakao + "/oauth/authorize",
-			TokenURL: authKakao + "/oauth/token",
-		},
-	}
-}
 
 type KakaoTokenResponse struct {
 	AccessToken  string `json:"access_token"`
@@ -46,67 +32,88 @@ type KakaoTokenResponse struct {
 	TokenType    string `json:"token_type"`
 }
 
-func stateTokenGet() string {
-	b := make([]byte, 32)
-	rand.Read(b)
-	return base64.StdEncoding.EncodeToString(b)
+const (
+	localServer = "http://localhost:8080"
+)
+
+func ReadKakaoConfig(cfg *config.Config) {
+	oauthConf = &oauth2.Config{
+		ClientID:     config.AppCtx.Cfg.KakaoClientId,
+		ClientSecret: config.AppCtx.Cfg.KakaoClientSecret,
+
+		RedirectURL: localServer + "/v1/user/login/kakao",
+		Endpoint:    kakao.Endpoint,
+	}
 }
 
-func LoginKakaoAuthUrlGet(w http.ResponseWriter, r *http.Request) {
+func randomState() string {
+	b := make([]byte, 32)
+	rand.Read(b)
+	return base64.RawURLEncoding.EncodeToString(b)
+}
+
+func KakaoAuthUrlGet(w http.ResponseWriter, r *http.Request) {
 	reqId := getRequestId(w, r)
 	logger.Debugf(reqId, "user/login/kakao/authurl GET started")
 
 	authSession, _ := store.Get(r, "authSession")
 	authSession.Options = &sessions.Options{
-		Path:   "/v1/user/login/kakao",
-		MaxAge: 300,
+		Path:   config.KakaoAuthSession.Path,
+		MaxAge: config.KakaoAuthSession.MaxAge,
 	}
-	state := stateTokenGet()
+
+	state := randomState()
 	authSession.Values["state"] = state
 	authSession.Save(r, w)
 
-	logger.Debugf(reqId, "state created: %s", state)
+	url := oauthConf.AuthCodeURL(state, oauth2.AccessTypeOffline)
 
-	url := oAuthConf.AuthCodeURL(state, oauth2.AccessTypeOffline)
-
-	fmt.Println("client id", config.AppCtx.Cfg.KakaoClientId)
-	fmt.Println(url)
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"oauthUrl": url})
+	resp := newOkResponse(w, reqId, constants.BASICOK)
+	resp.KakaoAuthUrl = url
+	writeResponse(reqId, w, resp)
 }
 
-func LoginKakaoGet(w http.ResponseWriter, r *http.Request) {
+func KakaoTokenGet(w http.ResponseWriter, r *http.Request) {
 	reqId := getRequestId(w, r)
 	logger.Debugf(reqId, "user/login/kakao GET started")
 
+	// 쿠키에 저장된 state 값 불러오기
 	authSession, _ := store.Get(r, "authSession")
 	state := authSession.Values["state"]
+	fmt.Println("state: ", state)
 	if state == nil {
 		logger.Debugf(reqId, "state is %s", state)
-		http.Redirect(w, r, "/v1/user/login/kakao/authurl", http.StatusFound)
+		resp := newResponse(w, reqId, 400, "Bad Request")
+		writeResponse(reqId, w, resp)
+		return
+	}
+	if state != r.URL.Query().Get("state") {
+		logger.Debugf(reqId, "state is %s", state)
+		resp := newResponse(w, reqId, 403, "Forbidden")
+		writeResponse(reqId, w, resp)
 		return
 	}
 
+	// 쿠키에 저장된 state 보관 기간 만료
 	authSession.Options = &sessions.Options{
 		MaxAge: -1,
 	}
 	authSession.Save(r, w)
 
-	c := r.FormValue("code")
-	fmt.Println(c)
+	// Get Kakao Auth Code
+	c := r.URL.Query().Get("code")
 
 	data := url.Values{
 		"grant_type":    {"authorization_code"},
-		"client_id":     {oAuthConf.ClientID},
-		"redirect_uri":  {oAuthConf.RedirectURL},
+		"client_id":     {oauthConf.ClientID},
+		"redirect_uri":  {oauthConf.RedirectURL},
 		"code":          {c},
-		"client_secret": {oAuthConf.ClientSecret},
+		"client_secret": {oauthConf.ClientSecret},
 	}
 
 	// 아래 코드 수정 필요
 	// fmt.Println(conf.Endpoint.TokenURL)
-	resp, err := http.PostForm(oAuthConf.Endpoint.TokenURL, data)
+	resp, err := http.PostForm(oauthConf.Endpoint.TokenURL, data)
 	if err != nil {
 		fmt.Println("Error while posting:", err)
 		return
@@ -129,10 +136,21 @@ func LoginKakaoGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	loginToken := &model.Token{}
+	loginToken.Token = tokenResponse.AccessToken
+
+	// resp = newOkResponse(w, reqId, constants.BASICOK)
+
+	// resp :=
+
+	// writeResponse(reqId, w, &model.Response{LoginToken: loginToken})
+
+	// fmt.Println("test==============", loginToken.Token)
+
 	// Output the token information
-	fmt.Printf("Access Token: %s\n", tokenResponse.AccessToken)
-	fmt.Printf("Expires In: %d\n", tokenResponse.ExpiresIn)
-	fmt.Printf("Refresh Token: %s\n", tokenResponse.RefreshToken)
-	fmt.Printf("Scope: %s\n", tokenResponse.Scope)
-	fmt.Printf("Token Type: %s\n", tokenResponse.TokenType)
+	// fmt.Printf("Access Token: %s\n", tokenResponse.AccessToken)
+	// fmt.Printf("Expires In: %d\n", tokenResponse.ExpiresIn)
+	// fmt.Printf("Refresh Token: %s\n", tokenResponse.RefreshToken)
+	// fmt.Printf("Scope: %s\n", tokenResponse.Scope)
+	// fmt.Printf("Token Type: %s\n", tokenResponse.TokenType)
 }
