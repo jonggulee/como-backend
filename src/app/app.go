@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/jonggulee/go-login.git/src/api/controller"
@@ -21,7 +22,6 @@ func init() {
 }
 
 func Configure(ctx *cli.Context, cfg *config.Config) (*config.Config, error) {
-
 	readListenPort(ctx, cfg)
 
 	readKakaoLoginClientId(ctx, cfg)
@@ -38,9 +38,12 @@ func RunFunc(ctx *cli.Context) error {
 
 	printConfig(cfg)
 
-	router := controller.NewRouter()
+	// controller.Config(cfg.KakaoClientId, cfg.KakaoClientSecret)
 
-	logger.Debugf(constants.NOREQID, "%s", http.ListenAndServe(":8080", router))
+	controller.ReadKakaoConfig(cfg)
+
+	router := controller.NewRouter()
+	logger.Debugf(constants.NOREQID, "%s", http.ListenAndServe(fmt.Sprintf(":%d", cfg.ListenPort), router))
 
 	return nil
 }

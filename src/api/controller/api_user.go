@@ -8,9 +8,9 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 
 	"github.com/gorilla/sessions"
+	"github.com/jonggulee/go-login.git/src/config"
 	"github.com/jonggulee/go-login.git/src/logger"
 	"golang.org/x/oauth2"
 )
@@ -21,12 +21,14 @@ const (
 )
 
 var (
-	store = sessions.NewCookieStore([]byte("secret"))
+	oAuthConf *oauth2.Config
+	store     = sessions.NewCookieStore([]byte("secret"))
+)
 
-	conf = &oauth2.Config{
-		// ClientID:     os.Getenv("CLIENT_ID"),
-		ClientID:     "430d87d746fda65902940a414adeadfd",
-		ClientSecret: os.Getenv("CLIENT_SECRET"),
+func ReadKakaoConfig(cfg *config.Config) {
+	oAuthConf = &oauth2.Config{
+		ClientID:     config.AppCtx.Cfg.KakaoClientId,
+		ClientSecret: config.AppCtx.Cfg.KakaoClientSecret,
 
 		RedirectURL: localServer + "/v1/user/login/kakao",
 		Endpoint: oauth2.Endpoint{
@@ -34,7 +36,7 @@ var (
 			TokenURL: authKakao + "/oauth/token",
 		},
 	}
-)
+}
 
 type KakaoTokenResponse struct {
 	AccessToken  string `json:"access_token"`
@@ -65,9 +67,9 @@ func LoginKakaoAuthUrlGet(w http.ResponseWriter, r *http.Request) {
 
 	logger.Debugf(reqId, "state created: %s", state)
 
-	url := conf.AuthCodeURL(state, oauth2.AccessTypeOffline)
+	url := oAuthConf.AuthCodeURL(state, oauth2.AccessTypeOffline)
 
-	// fmt.Println("clientID: ", os.Getenv("CLIENT_ID"))
+	fmt.Println("client id", config.AppCtx.Cfg.KakaoClientId)
 	fmt.Println(url)
 
 	w.Header().Set("Content-Type", "application/json")
@@ -96,15 +98,15 @@ func LoginKakaoGet(w http.ResponseWriter, r *http.Request) {
 
 	data := url.Values{
 		"grant_type":    {"authorization_code"},
-		"client_id":     {os.Getenv("CLIENT_ID")},
-		"redirect_uri":  {conf.RedirectURL},
+		"client_id":     {oAuthConf.ClientID},
+		"redirect_uri":  {oAuthConf.RedirectURL},
 		"code":          {c},
-		"client_secret": {os.Getenv("CLIENT_SECRET")},
+		"client_secret": {oAuthConf.ClientSecret},
 	}
 
 	// 아래 코드 수정 필요
-	fmt.Println(conf.Endpoint.TokenURL)
-	resp, err := http.PostForm(conf.Endpoint.TokenURL, data)
+	// fmt.Println(conf.Endpoint.TokenURL)
+	resp, err := http.PostForm(oAuthConf.Endpoint.TokenURL, data)
 	if err != nil {
 		fmt.Println("Error while posting:", err)
 		return
