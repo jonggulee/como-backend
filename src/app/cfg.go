@@ -45,7 +45,7 @@ func printConfig(cfg *config.Config) {
 	fmt.Println("                COMO API SERVER")
 	fmt.Println("==================================================")
 	fmt.Printf("Server is starting...\n\n")
-	fmt.Printf("Version:		%s\n", "v0.1")
+	fmt.Printf("Version:		%s\n", constants.APPVERSION)
 	fmt.Printf("Listening port: 	%d\n", cfg.ListenPort)
 	fmt.Printf("Started at: 		%s\n", time.Now().Format(time.RFC3339))
 	fmt.Println("==================================================")

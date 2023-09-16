@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/jonggulee/go-login.git/src/api/controller"
 	"github.com/jonggulee/go-login.git/src/config"
@@ -18,6 +19,7 @@ var (
 func init() {
 	App.Commands = []*cli.Command{
 		&RunCommand,
+		&VersionCommand,
 	}
 }
 
@@ -28,6 +30,11 @@ func Configure(ctx *cli.Context, cfg *config.Config) (*config.Config, error) {
 	readKakaoLoginClientSecret(ctx, cfg)
 
 	return cfg, nil
+}
+
+func VersionFunc(ctx *cli.Context) error {
+	fmt.Fprintf(os.Stdout, "%s-%s\n", constants.APPNAME, constants.APPVERSION)
+	return nil
 }
 
 func RunFunc(ctx *cli.Context) error {

@@ -13,4 +13,9 @@ var (
 			&ConfigKakaoClientSecret,
 		},
 	}
+	VersionCommand = cli.Command{
+		Action: VersionFunc,
+		Name:   "version",
+		Usage:  "print a version",
+	}
 )
