@@ -24,4 +24,36 @@ var (
 		Usage:   "Kakao Client Secret",
 		Aliases: []string{"ks"},
 	}
+
+	// Db
+	ConfigDbAddressFlag = cli.StringFlag{
+		Name:    "dbAddress",
+		Usage:   "set DB Address",
+		Aliases: []string{"d"},
+	}
+
+	ConfigDbPortFlag = cli.IntFlag{
+		Name:    "dbPort",
+		Usage:   "set DB Port",
+		Aliases: []string{"t"},
+		Value:   3306,
+	}
+
+	ConfigDbUserFlag = cli.StringFlag{
+		Name:    "dbUser",
+		Usage:   "set DB User",
+		Aliases: []string{"u"},
+	}
+
+	ConfigDbPasswordFlag = cli.StringFlag{
+		Name:    "dbPassword",
+		Usage:   "set DB Password",
+		Aliases: []string{"w"},
+	}
+
+	ConfigDbNameFlag = cli.StringFlag{
+		Name:    "dbName",
+		Usage:   "set Db Name",
+		Aliases: []string{"n"},
+	}
 )

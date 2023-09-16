@@ -92,7 +92,7 @@ func KakaoTokenGet(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	token, err := oauthConf.Exchange(ctx, c)
 	if err != nil {
-		logger.Errorf(reqId, "Failed to get token", err)
+		logger.Errorf(reqId, "Failed to get token")
 		resp := newResponse(w, reqId, 500, "Internal Server Error")
 		writeResponse(reqId, w, resp)
 		return
