@@ -3,9 +3,9 @@ package config
 type Config struct {
 	ListenPort int
 
-	// OAuth kakao Client ID
+	// OAuth Kakao Client ID
 	KakaoClientId string
-	// OAuth kakao Client Secret
+	// OAuth Kakao Client Secret
 	KakaoClientSecret string
 
 	// DB Address

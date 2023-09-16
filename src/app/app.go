@@ -8,6 +8,7 @@ import (
 	"github.com/jonggulee/go-login.git/src/api/controller"
 	"github.com/jonggulee/go-login.git/src/config"
 	"github.com/jonggulee/go-login.git/src/constants"
+	dbController "github.com/jonggulee/go-login.git/src/db/controller"
 	"github.com/jonggulee/go-login.git/src/logger"
 	"github.com/urfave/cli/v2"
 )
@@ -26,7 +27,7 @@ func init() {
 func Configure(ctx *cli.Context, cfg *config.Config) (*config.Config, error) {
 	readListenPort(ctx, cfg)
 
-	// Oauth Kakao
+	// OAuth Kakao
 	readKakaoLoginClientId(ctx, cfg)
 	readKakaoLoginClientSecret(ctx, cfg)
 
@@ -54,8 +55,16 @@ func RunFunc(ctx *cli.Context) error {
 	printConfig(cfg)
 
 	controller.ReadKakaoConfig(cfg)
+	dbConn, err := dbController.Connection(cfg.DbName, cfg.DbUser, cfg.DbPassword, cfg.DbAddress, cfg.DbPort)
+	if err != nil {
+		logger.Errorf(constants.NOREQID, "Failed to connect DB, %s", err)
+		os.Exit(1)
+	}
+
+	config.AppCtx.Db = dbConn
 
 	router := controller.NewRouter()
+
 	logger.Debugf(constants.NOREQID, "%s", http.ListenAndServe(fmt.Sprintf(":%d", cfg.ListenPort), router))
 
 	return nil

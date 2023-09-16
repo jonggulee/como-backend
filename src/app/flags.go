@@ -12,7 +12,7 @@ var (
 		Value:   8080,
 	}
 
-	// kakao
+	// OAuth Kakao
 	ConfigKakaoClientId = cli.StringFlag{
 		Name:    "kakaoClientId",
 		Usage:   "Kakao Client Id",
@@ -25,7 +25,7 @@ var (
 		Aliases: []string{"ks"},
 	}
 
-	// Db
+	// DB
 	ConfigDbAddressFlag = cli.StringFlag{
 		Name:    "dbAddress",
 		Usage:   "set DB Address",

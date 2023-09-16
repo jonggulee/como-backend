@@ -9,6 +9,8 @@ var (
 		Usage:  "Run the server",
 		Flags: []cli.Flag{
 			&ConfigListenPort,
+
+			// OAuth Kakao
 			&ConfigKakaoClientId,
 			&ConfigKakaoClientSecret,
 
