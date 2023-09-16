@@ -11,6 +11,13 @@ var (
 			&ConfigListenPort,
 			&ConfigKakaoClientId,
 			&ConfigKakaoClientSecret,
+
+			// DB
+			&ConfigDbAddressFlag,
+			&ConfigDbPortFlag,
+			&ConfigDbNameFlag,
+			&ConfigDbUserFlag,
+			&ConfigDbPasswordFlag,
 		},
 	}
 	VersionCommand = cli.Command{

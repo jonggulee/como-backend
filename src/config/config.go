@@ -3,8 +3,21 @@ package config
 type Config struct {
 	ListenPort int
 
-	KakaoClientId     string
+	// OAuth kakao Client ID
+	KakaoClientId string
+	// OAuth kakao Client Secret
 	KakaoClientSecret string
+
+	// DB Address
+	DbAddress string
+	// DB Port
+	DbPort int
+	// DB Name
+	DbName string
+	// DB User
+	DbUser string
+	// DB Password
+	DbPassword string
 }
 
 type AuthSession struct {

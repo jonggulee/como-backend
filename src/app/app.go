@@ -26,8 +26,16 @@ func init() {
 func Configure(ctx *cli.Context, cfg *config.Config) (*config.Config, error) {
 	readListenPort(ctx, cfg)
 
+	// Oauth Kakao
 	readKakaoLoginClientId(ctx, cfg)
 	readKakaoLoginClientSecret(ctx, cfg)
+
+	// DB
+	readDbAddress(ctx, cfg)
+	readDbPort(ctx, cfg)
+	readDbName(ctx, cfg)
+	readDbUser(ctx, cfg)
+	readDbPassword(ctx, cfg)
 
 	return cfg, nil
 }

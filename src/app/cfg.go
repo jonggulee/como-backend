@@ -11,22 +11,26 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func readKakaoLoginClientId(ctx *cli.Context, cfg *config.Config) {
+func readKakaoLoginClientId(ctx *cli.Context, cfg *config.Config) error {
 	cfg.KakaoClientId = ctx.String("kakaoClientId")
 
 	if cfg.KakaoClientId == "" {
 		logger.Logger.Fatal("Kakao Client Id is empty")
 		os.Exit(1)
 	}
+
+	return nil
 }
 
-func readKakaoLoginClientSecret(ctx *cli.Context, cfg *config.Config) {
+func readKakaoLoginClientSecret(ctx *cli.Context, cfg *config.Config) error {
 	cfg.KakaoClientSecret = ctx.String("kakaoClientSecret")
 
 	if cfg.KakaoClientSecret == "" {
 		logger.Logger.Fatal("Kakao Client Secret is empty")
 		os.Exit(1)
 	}
+
+	return nil
 }
 
 func readListenPort(ctx *cli.Context, cfg *config.Config) error {
@@ -37,6 +41,37 @@ func readListenPort(ctx *cli.Context, cfg *config.Config) error {
 	}
 
 	cfg.ListenPort = port
+
+	return nil
+}
+
+// DB Config
+func readDbAddress(ctx *cli.Context, cfg *config.Config) error {
+	cfg.DbAddress = ctx.String("dbAddress")
+
+	return nil
+}
+
+func readDbPort(ctx *cli.Context, cfg *config.Config) error {
+	cfg.DbPort = ctx.Int("dbPort")
+	return nil
+}
+
+func readDbUser(ctx *cli.Context, cfg *config.Config) error {
+	cfg.DbUser = ctx.String("dbUser")
+
+	return nil
+}
+
+func readDbPassword(ctx *cli.Context, cfg *config.Config) error {
+	cfg.DbPassword = ctx.String("dbPassword")
+
+	return nil
+}
+
+func readDbName(ctx *cli.Context, cfg *config.Config) error {
+	cfg.DbName = ctx.String("dbName")
+
 	return nil
 }
 
