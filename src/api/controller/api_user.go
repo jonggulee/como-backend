@@ -12,6 +12,7 @@ import (
 	"github.com/jonggulee/go-login.git/src/api/model"
 	"github.com/jonggulee/go-login.git/src/config"
 	"github.com/jonggulee/go-login.git/src/constants"
+	dbController "github.com/jonggulee/go-login.git/src/db/controller"
 	"github.com/jonggulee/go-login.git/src/logger"
 	"golang.org/x/oauth2"
 )
@@ -44,7 +45,7 @@ func randomState() string {
 	return base64.RawURLEncoding.EncodeToString(b)
 }
 
-func kakaoUserGet(w http.ResponseWriter, r *http.Request, token *model.KakaoToken) (*model.KakaoUser, error) {
+func kakaoUserGet(w http.ResponseWriter, r *http.Request, token *model.KakaoToken) (*model.UserInfo, error) {
 	reqId := getRequestId(w, r)
 	logger.Debugf(reqId, "user/login/kakao/user GET started")
 
@@ -72,18 +73,25 @@ func kakaoUserGet(w http.ResponseWriter, r *http.Request, token *model.KakaoToke
 		return nil, fmt.Errorf("failed to read body %s", err)
 	}
 
-	var tempUser model.TempKakaoUser
-	err = json.Unmarshal(body, &tempUser)
+	var kakaoUser model.KakaoUser
+	err = json.Unmarshal(body, &kakaoUser)
 	if err != nil {
 		logger.Errorf(reqId, "Failed to unmarshal body %s", err)
 		return nil, fmt.Errorf("failed to unmarshal body %s", err)
 	}
 
-	user := &model.KakaoUser{
-		Id:       tempUser.ID,
-		Nickname: tempUser.Properties.Nickname,
-		Email:    tempUser.KakaoAccount.Email,
+	user := &model.UserInfo{
+		KakaoId:    kakaoUser.ID,
+		Nickname:   kakaoUser.Properties.Nickname,
+		Email:      kakaoUser.KakaoAccount.Email,
+		JoinedType: 1,
 	}
+
+	// user := &model.KakaoUser{
+	// 	Id:       tempUser.ID,
+	// 	Nickname: tempUser.Properties.Nickname,
+	// 	Email:    tempUser.KakaoAccount.Email,
+	// }
 
 	return user, nil
 }
@@ -154,7 +162,7 @@ func KakaoTokenGet(w http.ResponseWriter, r *http.Request) {
 	kakaoToken.Expiry = token.Expiry
 
 	// kakao user 정보 가져오기
-	user, err := kakaoUserGet(w, r, kakaoToken)
+	kakaoUser, err := kakaoUserGet(w, r, kakaoToken)
 	if err != nil {
 		logger.Errorf(reqId, "Failed to get user info")
 		resp := newResponse(w, reqId, 500, "Internal Server Error")
@@ -162,7 +170,24 @@ func KakaoTokenGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(user)
+	user, err := dbController.UserFindByKakaoIdSelect(config.AppCtx.Db.Db, reqId, kakaoUser)
+	if err != nil {
+		logger.Errorf(reqId, "Failed to select from user... %s", err)
+		resp := newResponse(w, reqId, 500, "Internal Server Error")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
+	if user == nil {
+		// DB에 저장
+		err = dbController.UserSignUp(config.AppCtx.Db.Db, reqId, kakaoUser)
+		if err != nil {
+			logger.Errorf(reqId, "Failed to insert into user ... values %v, duo to %s", kakaoUser, err)
+			resp := newResponse(w, reqId, 500, "Internal Server Error")
+			writeResponse(reqId, w, resp)
+			return
+		}
+	}
 
 	resp := newOkResponse(w, reqId, constants.BASICOK)
 	resp.KakaoToken = kakaoToken
