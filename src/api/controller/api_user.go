@@ -3,6 +3,8 @@ package controller
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/gorilla/sessions"
@@ -37,6 +39,62 @@ func randomState() string {
 	b := make([]byte, 32)
 	rand.Read(b)
 	return base64.RawURLEncoding.EncodeToString(b)
+}
+
+func kakaoUserGet(w http.ResponseWriter, r *http.Request, token *model.KakaoToken) {
+	url := "https://kapi.kakao.com/v2/user/me"
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		logger.Errorf("", "Failed to create request")
+		resp := newResponse(w, "", 500, "Internal Server Error")
+		writeResponse("", w, resp)
+		return
+	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("%s %s", token.TokenType, token.Token))
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		logger.Errorf("", "Failed to get user info")
+		resp := newResponse(w, "", 500, "Internal Server Error")
+		writeResponse("", w, resp)
+		return
+	}
+
+	defer resp.Body.Close()
+
+	// user := &model.KakaoUser{}
+	// err = readBody(resp, user)
+	// if err != nil {
+	// 	logger.Errorf("", "Failed to read body")
+	// 	resp := newResponse(w, "", 500, "Internal Server Error")
+	// 	writeResponse("", w, resp)
+	// 	return
+	// }
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		logger.Errorf("", "Failed to read body")
+		resp := newResponse(w, "", 500, "Internal Server Error")
+		writeResponse("", w, resp)
+		return
+	}
+
+	fmt.Println("body:", string(body))
+
+	// var user UserInfo
+	// err = json.Unmarshal(body, &user)
+	// if err != nil {
+	// 	logger.Errorf("", "Failed to unmarshal body")
+	// 	resp := newResponse(w, "", 500, "Internal Server Error")
+	// 	writeResponse("", w, resp)
+	// 	return
+	// }
+
+	// return user
+
 }
 
 func KakaoAuthUrlGet(w http.ResponseWriter, r *http.Request) {
@@ -103,6 +161,8 @@ func KakaoTokenGet(w http.ResponseWriter, r *http.Request) {
 	kakaoToken.Token = token.AccessToken
 	kakaoToken.RefreshToken = token.RefreshToken
 	kakaoToken.Expiry = token.Expiry
+
+	kakaoUserGet(w, r, kakaoToken)
 
 	resp := newOkResponse(w, reqId, constants.BASICOK)
 	resp.KakaoToken = kakaoToken
