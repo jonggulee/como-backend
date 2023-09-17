@@ -20,14 +20,26 @@ type Config struct {
 	DbPassword string
 }
 
-type AuthSession struct {
+type authSession struct {
 	// 쿠키의 유효 시간
 	MaxAge int
 	// 쿠키의 도메인
 	Path string
 }
 
-var KakaoAuthSession = AuthSession{
+type kakaoEndpoint struct {
+	AuthURL  string
+	TokenURL string
+	UserURL  string
+}
+
+var KakaoAuthSession = authSession{
 	Path:   "/v1/user/login/kakao/token",
 	MaxAge: 300,
+}
+
+var KakaoEndpoint = kakaoEndpoint{
+	AuthURL:  "https://kauth.kakao.com/oauth/authorize",
+	TokenURL: "https://kauth.kakao.com/oauth/token",
+	UserURL:  "https://kapi.kakao.com/v2/user/me",
 }

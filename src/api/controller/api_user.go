@@ -3,6 +3,7 @@ package controller
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,7 +14,6 @@ import (
 	"github.com/jonggulee/go-login.git/src/constants"
 	"github.com/jonggulee/go-login.git/src/logger"
 	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/kakao"
 )
 
 var (
@@ -31,7 +31,10 @@ func ReadKakaoConfig(cfg *config.Config) {
 		ClientSecret: config.AppCtx.Cfg.KakaoClientSecret,
 
 		RedirectURL: localServer + config.KakaoAuthSession.Path,
-		Endpoint:    kakao.Endpoint,
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  config.KakaoEndpoint.AuthURL,
+			TokenURL: config.KakaoEndpoint.TokenURL,
+		},
 	}
 }
 
@@ -41,60 +44,48 @@ func randomState() string {
 	return base64.RawURLEncoding.EncodeToString(b)
 }
 
-func kakaoUserGet(w http.ResponseWriter, r *http.Request, token *model.KakaoToken) {
-	url := "https://kapi.kakao.com/v2/user/me"
+func kakaoUserGet(w http.ResponseWriter, r *http.Request, token *model.KakaoToken) (*model.KakaoUser, error) {
+	reqId := getRequestId(w, r)
+	logger.Debugf(reqId, "user/login/kakao/user GET started")
+
+	url := config.KakaoEndpoint.UserURL
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		logger.Errorf("", "Failed to create request")
-		resp := newResponse(w, "", 500, "Internal Server Error")
-		writeResponse("", w, resp)
-		return
+		logger.Errorf(reqId, "Failed to create request %s", err)
+		return nil, fmt.Errorf("failed to create request %s", err)
 	}
-
 	req.Header.Set("Authorization", fmt.Sprintf("%s %s", token.TokenType, token.Token))
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		logger.Errorf("", "Failed to get user info")
-		resp := newResponse(w, "", 500, "Internal Server Error")
-		writeResponse("", w, resp)
-		return
+		logger.Errorf(reqId, "Failed to get user info %s", err)
+		return nil, fmt.Errorf("failed to get user info %s", err)
 	}
 
 	defer resp.Body.Close()
 
-	// user := &model.KakaoUser{}
-	// err = readBody(resp, user)
-	// if err != nil {
-	// 	logger.Errorf("", "Failed to read body")
-	// 	resp := newResponse(w, "", 500, "Internal Server Error")
-	// 	writeResponse("", w, resp)
-	// 	return
-	// }
-
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		logger.Errorf("", "Failed to read body")
-		resp := newResponse(w, "", 500, "Internal Server Error")
-		writeResponse("", w, resp)
-		return
+		logger.Errorf("", "Failed to read body %s", err)
+		return nil, fmt.Errorf("failed to read body %s", err)
 	}
 
-	fmt.Println("body:", string(body))
+	var tempUser model.TempKakaoUser
+	err = json.Unmarshal(body, &tempUser)
+	if err != nil {
+		logger.Errorf(reqId, "Failed to unmarshal body %s", err)
+		return nil, fmt.Errorf("failed to unmarshal body %s", err)
+	}
 
-	// var user UserInfo
-	// err = json.Unmarshal(body, &user)
-	// if err != nil {
-	// 	logger.Errorf("", "Failed to unmarshal body")
-	// 	resp := newResponse(w, "", 500, "Internal Server Error")
-	// 	writeResponse("", w, resp)
-	// 	return
-	// }
+	user := &model.KakaoUser{
+		Id:       tempUser.ID,
+		Nickname: tempUser.Properties.Nickname,
+		Email:    tempUser.KakaoAccount.Email,
+	}
 
-	// return user
-
+	return user, nil
 }
 
 func KakaoAuthUrlGet(w http.ResponseWriter, r *http.Request) {
@@ -162,7 +153,16 @@ func KakaoTokenGet(w http.ResponseWriter, r *http.Request) {
 	kakaoToken.RefreshToken = token.RefreshToken
 	kakaoToken.Expiry = token.Expiry
 
-	kakaoUserGet(w, r, kakaoToken)
+	// kakao user 정보 가져오기
+	user, err := kakaoUserGet(w, r, kakaoToken)
+	if err != nil {
+		logger.Errorf(reqId, "Failed to get user info")
+		resp := newResponse(w, reqId, 500, "Internal Server Error")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
+	fmt.Println(user)
 
 	resp := newOkResponse(w, reqId, constants.BASICOK)
 	resp.KakaoToken = kakaoToken
