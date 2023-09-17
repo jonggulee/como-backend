@@ -87,12 +87,6 @@ func kakaoUserGet(w http.ResponseWriter, r *http.Request, token *model.KakaoToke
 		JoinedType: 1,
 	}
 
-	// user := &model.KakaoUser{
-	// 	Id:       tempUser.ID,
-	// 	Nickname: tempUser.Properties.Nickname,
-	// 	Email:    tempUser.KakaoAccount.Email,
-	// }
-
 	return user, nil
 }
 
