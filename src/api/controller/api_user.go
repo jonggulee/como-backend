@@ -45,7 +45,7 @@ func randomState() string {
 	return base64.RawURLEncoding.EncodeToString(b)
 }
 
-func kakaoUserGet(w http.ResponseWriter, r *http.Request, token *model.KakaoToken) (*model.UserInfo, error) {
+func kakaoUserGet(w http.ResponseWriter, r *http.Request, token *model.KakaoToken) (*model.User, error) {
 	reqId := getRequestId(w, r)
 	logger.Debugf(reqId, "user/login/kakao/user GET started")
 
@@ -80,7 +80,7 @@ func kakaoUserGet(w http.ResponseWriter, r *http.Request, token *model.KakaoToke
 		return nil, fmt.Errorf("failed to unmarshal body %s", err)
 	}
 
-	user := &model.UserInfo{
+	user := &model.User{
 		KakaoId:    kakaoUser.ID,
 		Nickname:   kakaoUser.Properties.Nickname,
 		Email:      kakaoUser.KakaoAccount.Email,

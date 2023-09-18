@@ -2,7 +2,7 @@ package model
 
 import "time"
 
-type UserInfo struct {
+type User struct {
 	// 사용자 고유 ID
 	Id int `json:"id,omitempty" gorm:"column:id;primaryKey;not null;autoIncrement:true"`
 

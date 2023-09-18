@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func UserSignUp(db *gorm.DB, reqId string, user *model.UserInfo) error {
+func UserSignUp(db *gorm.DB, reqId string, user *model.User) error {
 	logger.Debugf(reqId, "Try to insert into user ... values %v", user)
 
 	result := db.Table("user").Create(user)
@@ -18,7 +18,7 @@ func UserSignUp(db *gorm.DB, reqId string, user *model.UserInfo) error {
 	return nil
 }
 
-func UserFindByKakaoIdSelect(db *gorm.DB, reqId string, user *model.UserInfo) (*model.UserInfo, error) {
+func UserFindByKakaoIdSelect(db *gorm.DB, reqId string, user *model.User) (*model.User, error) {
 	logger.Debugf(reqId, "Try to select from user where kakao_id = %v", user.KakaoId)
 
 	result := db.Table("user").

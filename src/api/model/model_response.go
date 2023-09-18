@@ -13,5 +13,5 @@ type Response struct {
 
 	KakaoAuthUrl string `json:"kakaoAuthUrl,omitempty"`
 
-	UserInfo *UserInfo `json:"userInfo,omitempty"`
+	UserInfo *User `json:"userInfo,omitempty"`
 }
