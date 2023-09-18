@@ -7,4 +7,6 @@ const (
 	NOREQID = "no-id"
 
 	BASICOK = "Ok"
+
+	JWTPSK = "como"
 )

@@ -7,7 +7,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
+	"github.com/dgrijalva/jwt-go"
+	"github.com/google/uuid"
 	"github.com/gorilla/sessions"
 	"github.com/jonggulee/go-login.git/src/api/model"
 	"github.com/jonggulee/go-login.git/src/config"
@@ -43,6 +46,46 @@ func randomState() string {
 	b := make([]byte, 32)
 	rand.Read(b)
 	return base64.RawURLEncoding.EncodeToString(b)
+}
+
+func accessTokenGet(w http.ResponseWriter, r *http.Request, user *model.User) (*model.Token, error) {
+	reqId := getRequestId(w, r)
+	logger.Debugf(reqId, "user/login POST started")
+
+	// 세션 발급
+	sessionInfo := &model.SessionRequest{}
+	userSession := uuid.New().String()
+	sessionInfo.UserId = user.Id
+	sessionInfo.UserEmail = user.Email
+	sessionInfo.Session = userSession
+
+	err := dbController.SessionInsert(config.AppCtx.Db.Db, reqId, sessionInfo)
+	if err != nil {
+		logger.Errorf(reqId, "Failed to insert into session ... values %v, duo to %s", sessionInfo, err)
+		return nil, err
+	}
+
+	// access token 발급
+	accessToken := jwt.New(jwt.SigningMethodHS256)
+	claims := accessToken.Claims.(jwt.MapClaims)
+	claims["exp"] = time.Now().Add(time.Hour * 168).Unix()
+	claims["iat"] = time.Now().Unix()
+	claims["session"] = userSession
+
+	t, err := accessToken.SignedString([]byte(constants.JWTPSK))
+	if err != nil {
+		logger.Errorf(reqId, "Failed to set jwt token, %s", err)
+		return nil, err
+	}
+	if t == "" {
+		logger.Errorf(reqId, "Failed to get jwt token")
+		return nil, err
+	}
+
+	loginToken := &model.Token{}
+	loginToken.Token = t
+
+	return loginToken, nil
 }
 
 func kakaoUserGet(w http.ResponseWriter, r *http.Request, token *model.KakaoToken) (*model.User, error) {
@@ -183,7 +226,15 @@ func KakaoTokenGet(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	accessToken, err := accessTokenGet(w, r, user)
+	if err != nil {
+		logger.Errorf(reqId, "Failed to login user %s", err)
+		resp := newResponse(w, reqId, 500, "Internal Server Error")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
 	resp := newOkResponse(w, reqId, constants.BASICOK)
-	resp.KakaoToken = kakaoToken
+	resp.LoginToken = accessToken
 	writeResponse(reqId, w, resp)
 }

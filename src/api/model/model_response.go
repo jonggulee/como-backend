@@ -14,4 +14,8 @@ type Response struct {
 	KakaoAuthUrl string `json:"kakaoAuthUrl,omitempty"`
 
 	UserInfo *User `json:"userInfo,omitempty"`
+
+	SessionRequest *SessionRequest `json:"sessionRequest,omitempty"`
+
+	LoginToken *Token `json:"token,omitempty"`
 }

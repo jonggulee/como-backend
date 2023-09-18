@@ -6,6 +6,18 @@ import (
 	"gorm.io/gorm"
 )
 
+func SessionInsert(db *gorm.DB, reqId string, session *model.SessionRequest) error {
+	logger.Debugf(reqId, "Try to insert into session ... values %v", session)
+
+	result := db.Table("session").Create(session)
+	if result.Error != nil {
+		logger.Errorf(reqId, "Failed to insert into session... %s", result.Error)
+		return result.Error
+	}
+
+	return nil
+}
+
 func UserSignUp(db *gorm.DB, reqId string, user *model.User) error {
 	logger.Debugf(reqId, "Try to insert into user ... values %v", user)
 
