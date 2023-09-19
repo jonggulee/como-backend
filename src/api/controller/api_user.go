@@ -17,6 +17,7 @@ import (
 	"github.com/jonggulee/go-login.git/src/constants"
 	dbController "github.com/jonggulee/go-login.git/src/db/controller"
 	"github.com/jonggulee/go-login.git/src/logger"
+	"github.com/jonggulee/go-login.git/src/utils"
 	"golang.org/x/oauth2"
 )
 
@@ -237,4 +238,26 @@ func KakaoTokenGet(w http.ResponseWriter, r *http.Request) {
 	resp := newOkResponse(w, reqId, constants.BASICOK)
 	resp.LoginToken = accessToken
 	writeResponse(reqId, w, resp)
+}
+
+func DetailUserGet(w http.ResponseWriter, r *http.Request) {
+	reqId := getRequestId(w, r)
+	logger.Debugf(reqId, "user/detail GET started")
+
+	token := r.Header.Get("Authorization")
+	if token == "" {
+		logger.Errorf(reqId, "Failed to get authorization header")
+		resp := newResponse(w, reqId, 400, "Bad Request")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
+	decodedJwt, err := utils.DecodeJwt(reqId, token)
+	if err != nil {
+		logger.Errorf(reqId, "Failed to decode authorization header to jwt token")
+		resp := newResponse(w, reqId, 500, "Internal error")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
 }
