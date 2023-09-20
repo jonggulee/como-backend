@@ -54,15 +54,15 @@ func accessTokenGet(w http.ResponseWriter, r *http.Request, user *model.User) (*
 	logger.Debugf(reqId, "user/login POST started")
 
 	// 세션 발급
-	sessionInfo := &model.SessionRequest{}
+	session := &model.SessionRequest{}
 	userSession := uuid.New().String()
-	sessionInfo.UserId = user.Id
-	sessionInfo.UserEmail = user.Email
-	sessionInfo.Session = userSession
+	session.UserId = user.Id
+	session.UserEmail = user.Email
+	session.Session = userSession
 
-	err := dbController.SessionInsert(config.AppCtx.Db.Db, reqId, sessionInfo)
+	err := dbController.SessionInsert(config.AppCtx.Db.Db, reqId, session)
 	if err != nil {
-		logger.Errorf(reqId, "Failed to insert into session ... values %v, duo to %s", sessionInfo, err)
+		logger.Errorf(reqId, "Failed to insert into session ... values %v, duo to %s", session, err)
 		return nil, err
 	}
 
@@ -259,5 +259,7 @@ func DetailUserGet(w http.ResponseWriter, r *http.Request) {
 		writeResponse(reqId, w, resp)
 		return
 	}
+
+	fmt.Println(decodedJwt)
 
 }

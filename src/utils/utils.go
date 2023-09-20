@@ -5,11 +5,12 @@ import (
 	"strings"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/jonggulee/go-login.git/src/api/model"
 	"github.com/jonggulee/go-login.git/src/constants"
 	"github.com/jonggulee/go-login.git/src/logger"
 )
 
-func DecodeJwt(reqId, auth string) (*model.SessionInfo, error) {
+func DecodeJwt(reqId, auth string) (*model.Session, error) {
 	logger.Debugf(reqId, "Start decoding JWT token: %s", auth)
 
 	claims := jwt.MapClaims{}
@@ -29,6 +30,8 @@ func DecodeJwt(reqId, auth string) (*model.SessionInfo, error) {
 		logger.Errorf(reqId, "Invalid JWT token: %s", auth)
 		return nil, err
 	}
+
+	return nil, nil
 
 }
 
