@@ -6,7 +6,9 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/jonggulee/go-login.git/src/api/model"
+	"github.com/jonggulee/go-login.git/src/config"
 	"github.com/jonggulee/go-login.git/src/constants"
+	dbController "github.com/jonggulee/go-login.git/src/db/controller"
 	"github.com/jonggulee/go-login.git/src/logger"
 )
 
@@ -15,8 +17,9 @@ func DecodeJwt(reqId, auth string) (*model.Session, error) {
 
 	claims := jwt.MapClaims{}
 
-	auth = strings.Replace(auth, "Bearer ", "", 1)
-	auth = strings.Replace(auth, "bearer ", "", 1)
+	if strings.HasPrefix(strings.ToLower(auth), "bearer ") {
+		auth = auth[7:]
+	}
 
 	keyFunc := GetKeyFunc()
 
@@ -31,8 +34,24 @@ func DecodeJwt(reqId, auth string) (*model.Session, error) {
 		return nil, err
 	}
 
-	return nil, nil
+	sessionId, ok := claims["session"].(string)
+	if !ok {
+		logger.Errorf(reqId, "Failed to get session_id from JWT token: %s", auth)
+		return nil, err
+	}
 
+	sessionInfo, err := dbController.SessionSelect(config.AppCtx.Db.Db, reqId, sessionId)
+	if err != nil {
+		logger.Errorf(reqId, "Failed to select session by session: %s, due to %s", sessionId, err)
+		return nil, err
+	}
+
+	if sessionInfo.Id == 0 {
+		logger.Errorf(reqId, "Session not found: %s", sessionId)
+		return nil, errors.New("session not found")
+	}
+
+	return sessionInfo, nil
 }
 
 func GetKeyFunc() jwt.Keyfunc {
