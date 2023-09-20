@@ -18,6 +18,38 @@ func SessionInsert(db *gorm.DB, reqId string, session *model.SessionRequest) err
 	return nil
 }
 
+func SessionSelect(db *gorm.DB, reqId, session string) (*model.Session, error) {
+	logger.Debugf(reqId, "Try to select * from session where session = %s", session)
+
+	sessionInfo := &model.Session{}
+
+	result := db.Table("session").
+		Joins("JOIN user ON session.user_id = user.id").
+		Where("session.session = ? AND session.deleted_yn = 0", session).
+		Find(sessionInfo)
+
+	if result.Error != nil {
+		logger.Errorf(reqId, "Failed to select * from session where session = %s", session)
+		return nil, result.Error
+	}
+
+	return sessionInfo, nil
+}
+
+func UserDetailSelect(db *gorm.DB, reqId string, userId int) (*model.User, error) {
+	logger.Debugf(reqId, "Try to select * from user where id = %d", userId)
+
+	user := model.User{}
+
+	result := db.Table("user").Find(&user, "id = ? AND deleted_yn = 0", userId)
+	if result.Error != nil {
+		logger.Errorf(reqId, "Failed to select * from user where id = %d", userId)
+		return nil, result.Error
+	}
+
+	return &user, nil
+}
+
 func UserSignUp(db *gorm.DB, reqId string, user *model.User) error {
 	logger.Debugf(reqId, "Try to insert into user ... values %v", user)
 

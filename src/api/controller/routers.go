@@ -53,4 +53,10 @@ var routes = Routes{
 		"/v1/user/login/kakao/token",
 		KakaoTokenGet,
 	},
+	Route{
+		"DetailUserGet",
+		strings.ToUpper("GET"),
+		"/v1/user/detail",
+		DetailUserGet,
+	},
 }

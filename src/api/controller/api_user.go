@@ -260,6 +260,28 @@ func DetailUserGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(decodedJwt)
+	if decodedJwt.Session == "" {
+		logger.Errorf(reqId, "Failed to get session from jwt token")
+		resp := newResponse(w, reqId, 403, "Forbidden")
+		writeResponse(reqId, w, resp)
+		return
+	}
 
+	user, err := dbController.UserDetailSelect(config.AppCtx.Db.Db, reqId, decodedJwt.UserId)
+	if err != nil {
+		logger.Errorf(reqId, "Failed to select * from user where user_id = %d", decodedJwt.UserId)
+		resp := newResponse(w, reqId, 500, "Internal Server Error")
+		writeResponse(reqId, w, resp)
+		return
+	}
+	if user == nil {
+		logger.Errorf(reqId, "Failed to get user")
+		resp := newResponse(w, reqId, 403, "Forbidden")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
+	resp := newOkResponse(w, reqId, constants.BASICOK)
+	resp.UserInfo = user
+	writeResponse(reqId, w, resp)
 }

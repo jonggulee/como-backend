@@ -15,6 +15,9 @@ type Session struct {
 	// 사용자
 	User *User `json:"user,omitempty" gorm:"foreignKey:UserId"`
 
+	// 세션
+	Session string `json:"session,omitempty" gorm:"column:session;not null'"`
+
 	// 세션 생성 일시
 	CreatedAt time.Time `json:"createdAt,omitempty" gorm:"column:created_at;not null;autoCreateTime"`
 
