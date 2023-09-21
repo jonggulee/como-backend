@@ -69,7 +69,9 @@ func accessTokenGet(w http.ResponseWriter, r *http.Request, user *model.User) (*
 	// access token 발급
 	accessToken := jwt.New(jwt.SigningMethodHS256)
 	claims := accessToken.Claims.(jwt.MapClaims)
+
 	claims["exp"] = time.Now().Add(time.Hour * 168).Unix()
+	claims["exp"] = time.Now().Add(time.Minute * 1).Unix()
 	claims["iat"] = time.Now().Unix()
 	claims["session"] = userSession
 
@@ -254,7 +256,16 @@ func DetailUserGet(w http.ResponseWriter, r *http.Request) {
 
 	decodedJwt, err := utils.DecodeJwt(reqId, token)
 	if err != nil {
-		logger.Errorf(reqId, "Failed to decode authorization header to jwt token")
+		if ve, ok := err.(*jwt.ValidationError); ok {
+			if ve.Errors&(jwt.ValidationErrorExpired) != 0 {
+				logger.Errorf(reqId, "Failed to expired or not valid yet")
+				resp := newResponse(w, reqId, 401, "Token Expired")
+				writeResponse(reqId, w, resp)
+				return
+			}
+		}
+
+		logger.Errorf(reqId, "Failed to decode authorization header to jwt token %s", err)
 		resp := newResponse(w, reqId, 500, "Internal error")
 		writeResponse(reqId, w, resp)
 		return
