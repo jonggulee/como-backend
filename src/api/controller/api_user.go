@@ -49,9 +49,16 @@ func randomState() string {
 	return base64.RawURLEncoding.EncodeToString(b)
 }
 
-func accessTokenGet(w http.ResponseWriter, r *http.Request, user *model.User) (*model.Token, error) {
-	reqId := getRequestId(w, r)
+// func accessTokenGet(w http.ResponseWriter, r *http.Request, user *model.User) (*model.Token, error) {
+func accessTokenGet(reqId string, user *model.User) (*model.Token, error) {
 	logger.Debugf(reqId, "user/login POST started")
+
+	fmt.Println(user)
+
+	if user == nil {
+		logger.Errorf(reqId, "Failed to get user")
+		return nil, fmt.Errorf("failed to get user")
+	}
 
 	// 세션 발급
 	session := &model.SessionRequest{}
@@ -90,8 +97,9 @@ func accessTokenGet(w http.ResponseWriter, r *http.Request, user *model.User) (*
 	return loginToken, nil
 }
 
-func kakaoUserGet(w http.ResponseWriter, r *http.Request, token *model.KakaoToken) (*model.User, error) {
-	reqId := getRequestId(w, r)
+// func kakaoUserGet(w http.ResponseWriter, r *http.Request, token *model.KakaoToken) (*model.User, error) {
+func kakaoUserGet(reqId string, token *model.KakaoToken) (*model.User, error) {
+	// reqId := getRequestId(w, r)
 	logger.Debugf(reqId, "user/login/kakao/user GET started")
 
 	url := config.KakaoEndpoint.UserURL
@@ -201,7 +209,7 @@ func KakaoTokenGet(w http.ResponseWriter, r *http.Request) {
 	kakaoToken.Expiry = token.Expiry
 
 	// kakao user 정보 가져오기
-	kakaoUser, err := kakaoUserGet(w, r, kakaoToken)
+	kakaoUser, err := kakaoUserGet(reqId, kakaoToken)
 	if err != nil {
 		logger.Errorf(reqId, "Failed to get user info")
 		resp := newResponse(w, reqId, 500, "Internal Server Error")
@@ -218,7 +226,7 @@ func KakaoTokenGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if user == nil {
-		// DB에 저장
+		// DB에 user 정보 저장
 		err = dbController.UserSignUp(config.AppCtx.Db.Db, reqId, kakaoUser)
 		if err != nil {
 			logger.Errorf(reqId, "Failed to insert into user ... values %v, duo to %s", kakaoUser, err)
@@ -226,16 +234,23 @@ func KakaoTokenGet(w http.ResponseWriter, r *http.Request) {
 			writeResponse(reqId, w, resp)
 			return
 		}
+
+		user, err = dbController.UserFindByKakaoIdSelect(config.AppCtx.Db.Db, reqId, kakaoUser)
+		if err != nil {
+			logger.Errorf(reqId, "Failed to select from user... %s", err)
+			resp := newResponse(w, reqId, 500, "Internal Server Error")
+			writeResponse(reqId, w, resp)
+			return
+		}
 	}
 
-	accessToken, err := accessTokenGet(w, r, user)
+	accessToken, err := accessTokenGet(reqId, user)
 	if err != nil {
 		logger.Errorf(reqId, "Failed to login user %s", err)
 		resp := newResponse(w, reqId, 500, "Internal Server Error")
 		writeResponse(reqId, w, resp)
 		return
 	}
-
 	resp := newOkResponse(w, reqId, constants.BASICOK)
 	resp.LoginToken = accessToken
 	writeResponse(reqId, w, resp)
@@ -334,10 +349,10 @@ func DetailUserPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := &model.UserEditRequest{}
-	user.UserId = decodedJwt.UserId
+	userReq := &model.UserEditRequest{}
+	userReq.UserId = decodedJwt.UserId
 
-	err = json.NewDecoder(r.Body).Decode(user)
+	err = json.NewDecoder(r.Body).Decode(userReq)
 	if err != nil {
 		logger.Errorf(reqId, "Failed to decode request body %s", err)
 		resp := newResponse(w, reqId, 400, "Bad Request")
@@ -345,14 +360,29 @@ func DetailUserPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = dbController.UserDetailUpdate(config.AppCtx.Db.Db, reqId, user)
+	err = dbController.UserDetailUpdate(config.AppCtx.Db.Db, reqId, userReq)
 	if err != nil {
-		logger.Errorf(reqId, "Failed to update user ... %v, due to %s", user, err)
+		logger.Errorf(reqId, "Failed to update user ... %v, due to %s", userReq, err)
 		resp := newResponse(w, reqId, 500, "Internal Server Error")
 		writeResponse(reqId, w, resp)
 		return
 	}
 
+	user, err := dbController.UserDetailSelect(config.AppCtx.Db.Db, reqId, decodedJwt.UserId)
+	if err != nil {
+		logger.Errorf(reqId, "Failed to select * from user where user_id = %d", decodedJwt.UserId)
+		resp := newResponse(w, reqId, 500, "Internal Server Error")
+		writeResponse(reqId, w, resp)
+		return
+	}
+	if user == nil {
+		logger.Errorf(reqId, "Failed to get user")
+		resp := newResponse(w, reqId, 403, "Forbidden")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
 	resp := newOkResponse(w, reqId, constants.BASICOK)
+	resp.UserInfo = user
 	writeResponse(reqId, w, resp)
 }
