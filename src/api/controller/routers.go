@@ -59,4 +59,10 @@ var routes = Routes{
 		"/v1/user/detail",
 		DetailUserGet,
 	},
+	Route{
+		"DetailUserPost",
+		strings.ToUpper("Post"),
+		"/v1/user/detail",
+		DetailUserPost,
+	},
 }

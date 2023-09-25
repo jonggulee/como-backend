@@ -50,6 +50,18 @@ func UserDetailSelect(db *gorm.DB, reqId string, userId int) (*model.User, error
 	return &user, nil
 }
 
+func UserDetailUpdate(db *gorm.DB, reqId string, userReq *model.UserEditRequest) error {
+	logger.Debugf(reqId, "Try to update user set ... %v", userReq)
+
+	result := db.Table("user").Omit("UpdatedAt").Where("deleted_yn = 0").Updates(userReq)
+	if result.Error != nil {
+		logger.Errorf(reqId, "Failed to update user set ... %v, %s", userReq, result.Error)
+		return result.Error
+	}
+
+	return nil
+}
+
 func UserSignUp(db *gorm.DB, reqId string, user *model.User) error {
 	logger.Debugf(reqId, "Try to insert into user ... values %v", user)
 

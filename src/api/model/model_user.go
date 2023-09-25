@@ -1,6 +1,11 @@
 package model
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+
+	"gorm.io/gorm"
+)
 
 type User struct {
 	// 사용자 고유 ID
@@ -23,8 +28,30 @@ type User struct {
 	CreatedAt time.Time `json:"createdAt,omitempty" gorm:"column:created_at;not null;autoCreateTime"`
 
 	// 회원 정보 수정 일시
-	UpdatedAt time.Time `json:"updatedAt,omitempty" gorm:"column:updated_at;not null;autoUpdateTime"`
+	UpdatedAt time.Time `json:"updatedAt,omitempty" gorm:"column:updated_at;not null;autoUpdateTime:true"`
 
 	// 회원 탈퇴 여부
 	DeletedYn byte `json:"deleteYn,omitempty" gorm:"column:deleted_yn;not null"`
+}
+
+func (u *User) MarshalJSON() ([]byte, error) {
+	type Alias User
+	return json.Marshal(&struct {
+		*Alias
+		CreatedAt string `json:"createdAt"`
+		UpdatedAt string `json:"updatedAt"`
+	}{
+		Alias:     (*Alias)(u),
+		CreatedAt: u.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+		UpdatedAt: u.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
+	})
+}
+
+func (u *User) AfterUpdate(tx *gorm.DB) error {
+	u.UpdatedAt = time.Now()
+	return nil
+}
+
+func (u *User) TableName() string {
+	return "user"
 }

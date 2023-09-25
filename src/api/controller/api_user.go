@@ -71,7 +71,6 @@ func accessTokenGet(w http.ResponseWriter, r *http.Request, user *model.User) (*
 	claims := accessToken.Claims.(jwt.MapClaims)
 
 	claims["exp"] = time.Now().Add(time.Hour * 168).Unix()
-	claims["exp"] = time.Now().Add(time.Minute * 1).Unix()
 	claims["iat"] = time.Now().Unix()
 	claims["session"] = userSession
 
@@ -257,6 +256,7 @@ func DetailUserGet(w http.ResponseWriter, r *http.Request) {
 	decodedJwt, err := utils.DecodeJwt(reqId, token)
 	if err != nil {
 		if ve, ok := err.(*jwt.ValidationError); ok {
+			// 토큰 만료 에러 처리
 			if ve.Errors&(jwt.ValidationErrorExpired) != 0 {
 				logger.Errorf(reqId, "Failed to expired or not valid yet")
 				resp := newResponse(w, reqId, 401, "Token Expired")
@@ -294,5 +294,65 @@ func DetailUserGet(w http.ResponseWriter, r *http.Request) {
 
 	resp := newOkResponse(w, reqId, constants.BASICOK)
 	resp.UserInfo = user
+	writeResponse(reqId, w, resp)
+}
+
+func DetailUserPost(w http.ResponseWriter, r *http.Request) {
+	reqId := getRequestId(w, r)
+	logger.Debugf(reqId, "user/detail POST started")
+
+	token := r.Header.Get("Authorization")
+	if token == "" {
+		logger.Errorf(reqId, "Failed to get authorization header")
+		resp := newResponse(w, reqId, 400, "Bad Request")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
+	decodedJwt, err := utils.DecodeJwt(reqId, token)
+	if err != nil {
+		if ve, ok := err.(*jwt.ValidationError); ok {
+			// 토큰 만료 에러 처리
+			if ve.Errors&(jwt.ValidationErrorExpired) != 0 {
+				logger.Errorf(reqId, "Failed to expired or not valid yet")
+				resp := newResponse(w, reqId, 401, "Token Expired")
+				writeResponse(reqId, w, resp)
+				return
+			}
+		}
+
+		logger.Errorf(reqId, "Failed to decode authorization header to jwt token %s", err)
+		resp := newResponse(w, reqId, 500, "Internal error")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
+	if decodedJwt.Session == "" {
+		logger.Errorf(reqId, "Failed to get session from jwt token")
+		resp := newResponse(w, reqId, 403, "Forbidden")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
+	user := &model.UserEditRequest{}
+	user.UserId = decodedJwt.UserId
+
+	err = json.NewDecoder(r.Body).Decode(user)
+	if err != nil {
+		logger.Errorf(reqId, "Failed to decode request body %s", err)
+		resp := newResponse(w, reqId, 400, "Bad Request")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
+	err = dbController.UserDetailUpdate(config.AppCtx.Db.Db, reqId, user)
+	if err != nil {
+		logger.Errorf(reqId, "Failed to update user ... %v, due to %s", user, err)
+		resp := newResponse(w, reqId, 500, "Internal Server Error")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
+	resp := newOkResponse(w, reqId, constants.BASICOK)
 	writeResponse(reqId, w, resp)
 }
