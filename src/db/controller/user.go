@@ -42,6 +42,11 @@ func UserDetailSelect(db *gorm.DB, reqId string, userId int) (*model.User, error
 	user := model.User{}
 
 	result := db.Table("user").Find(&user, "id = ? AND deleted_yn = 0", userId)
+
+	if result.RowsAffected == 0 {
+		return nil, nil
+	}
+
 	if result.Error != nil {
 		logger.Errorf(reqId, "Failed to select * from user where id = %d", userId)
 		return nil, result.Error
