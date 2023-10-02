@@ -386,3 +386,71 @@ func DetailUserPost(w http.ResponseWriter, r *http.Request) {
 	resp.UserInfo = user
 	writeResponse(reqId, w, resp)
 }
+
+func WithdrawUserPost(w http.ResponseWriter, r *http.Request) {
+	reqId := getRequestId(w, r)
+	logger.Debugf(reqId, "user/withdraw POST started")
+
+	token := r.Header.Get("Authorization")
+	if token == "" {
+		logger.Errorf(reqId, "Failed to get authorization header")
+		resp := newResponse(w, reqId, 400, "Bad Request")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
+	decodedJwt, err := utils.DecodeJwt(reqId, token)
+	if err != nil {
+		if ve, ok := err.(*jwt.ValidationError); ok {
+			// 토큰 만료 에러 처리
+			if ve.Errors&(jwt.ValidationErrorExpired) != 0 {
+				logger.Errorf(reqId, "Failed to expired or not valid yet")
+				resp := newResponse(w, reqId, 401, "Token Expired")
+				writeResponse(reqId, w, resp)
+				return
+			}
+		}
+
+		logger.Errorf(reqId, "Failed to decode authorization header to jwt token %s", err)
+		resp := newResponse(w, reqId, 500, "Internal error")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
+	if decodedJwt.Session == "" {
+		logger.Errorf(reqId, "Failed to get session from jwt token")
+		resp := newResponse(w, reqId, 403, "Forbidden")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
+	// user := &model.User{}
+	// user.Id = decodedJwt.UserId
+
+	user, err := dbController.UserDetailSelect(config.AppCtx.Db.Db, reqId, decodedJwt.UserId)
+	if err != nil {
+		logger.Errorf(reqId, "Failed to select * from user where user_id = %d", decodedJwt.UserId)
+		resp := newResponse(w, reqId, 500, "Internal Server Error")
+		writeResponse(reqId, w, resp)
+		return
+	}
+	if user == nil {
+		logger.Errorf(reqId, "Failed to get user")
+		resp := newResponse(w, reqId, 403, "Forbidden")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
+	user.DeletedYn = 1
+
+	err = dbController.UserWithdrawUpdate(config.AppCtx.Db.Db, reqId, user)
+	if err != nil {
+		logger.Errorf(reqId, "Failed to update user ... %v, due to %s", user, err)
+		resp := newResponse(w, reqId, 500, "Internal Server Error")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
+	resp := newOkResponse(w, reqId, constants.BASICOK)
+	writeResponse(reqId, w, resp)
+}

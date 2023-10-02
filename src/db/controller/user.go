@@ -74,12 +74,22 @@ func UserSignUp(db *gorm.DB, reqId string, user *model.User) error {
 	return nil
 }
 
+func UserWithdrawUpdate(db *gorm.DB, reqId string, user *model.User) error {
+	logger.Debugf(reqId, "Try to delete user set ... %v", user)
+
+	result := db.Table("user").Omit("UpdatedAt").Where("deleted_yn = 0").Updates(user)
+	if result.Error != nil {
+		logger.Errorf(reqId, "Failed to update delete user set ... %v, %s", user, result.Error)
+		return result.Error
+	}
+
+	return nil
+}
+
 func UserFindByKakaoIdSelect(db *gorm.DB, reqId string, user *model.User) (*model.User, error) {
 	logger.Debugf(reqId, "Try to select from user where kakao_id = %v", user.KakaoId)
 
-	result := db.Table("user").
-		Where("kakao_id = ?", user.KakaoId).
-		Find(&user, "deleted_yn=0")
+	result := db.Table("user").Where("kakao_id = ?", user.KakaoId).Find(&user, "deleted_yn = 0")
 
 	if result.RowsAffected == 0 {
 		return nil, nil

@@ -65,4 +65,10 @@ var routes = Routes{
 		"/v1/user/detail",
 		DetailUserPost,
 	},
+	Route{
+		"WithdrawUserPost",
+		strings.ToUpper("Post"),
+		"/v1/user/withdraw",
+		WithdrawUserPost,
+	},
 }
