@@ -143,7 +143,7 @@ func kakaoUserGet(reqId string, token *model.KakaoToken) (*model.User, error) {
 	return user, nil
 }
 
-func KakaoAuthUrlGet(w http.ResponseWriter, r *http.Request) {
+func AuthurlKakaoLoginUserGet(w http.ResponseWriter, r *http.Request) {
 	reqId := getRequestId(w, r)
 	logger.Debugf(reqId, "user/login/kakao/authurl GET started")
 
@@ -164,7 +164,7 @@ func KakaoAuthUrlGet(w http.ResponseWriter, r *http.Request) {
 	writeResponse(reqId, w, resp)
 }
 
-func KakaoTokenGet(w http.ResponseWriter, r *http.Request) {
+func TokenKakaoLoginUserGet(w http.ResponseWriter, r *http.Request) {
 	reqId := getRequestId(w, r)
 	logger.Debugf(reqId, "user/login/kakao GET started")
 
@@ -423,9 +423,6 @@ func WithdrawUserPost(w http.ResponseWriter, r *http.Request) {
 		writeResponse(reqId, w, resp)
 		return
 	}
-
-	// user := &model.User{}
-	// user.Id = decodedJwt.UserId
 
 	user, err := dbController.UserDetailSelect(config.AppCtx.Db.Db, reqId, decodedJwt.UserId)
 	if err != nil {

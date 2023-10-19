@@ -18,4 +18,8 @@ type Response struct {
 	SessionRequest *SessionRequest `json:"sessionRequest,omitempty"`
 
 	LoginToken *Token `json:"token,omitempty"`
+
+	Events *[]Event `json:"events,omitempty"`
+
+	Event *Event `json:"event,omitempty"`
 }

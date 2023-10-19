@@ -42,16 +42,16 @@ var routes = Routes{
 		Index,
 	},
 	Route{
-		"LoginKakaoAuthUrlGet",
+		"AuthurlKakaoLoginUserGet",
 		strings.ToUpper("GET"),
 		"/v1/user/login/kakao/authurl",
-		KakaoAuthUrlGet,
+		AuthurlKakaoLoginUserGet,
 	},
 	Route{
-		"LoginKakaoGet",
+		"TokenKakaoLoginUserGet",
 		strings.ToUpper("GET"),
 		"/v1/user/login/kakao/token",
-		KakaoTokenGet,
+		TokenKakaoLoginUserGet,
 	},
 	Route{
 		"DetailUserGet",
@@ -70,5 +70,11 @@ var routes = Routes{
 		strings.ToUpper("Post"),
 		"/v1/user/withdraw",
 		WithdrawUserPost,
+	},
+	Route{
+		"ListEventGet",
+		strings.ToUpper("GET"),
+		"/v1/event",
+		ListEventGet,
 	},
 }
