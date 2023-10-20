@@ -19,3 +19,15 @@ func EventSelect(db *gorm.DB, reqId string) (*[]model.Event, error) {
 
 	return &events, nil
 }
+
+func EventCreateInsert(db *gorm.DB, reqId string, event *model.EventCreateRequest) error {
+	logger.Debugf(reqId, "Try to insert into event ... values %v", event)
+
+	result := db.Table("event").Create(event)
+	if result.Error != nil {
+		logger.Errorf(reqId, "Failed to insert into event... %s", result.Error)
+		return result.Error
+	}
+
+	return nil
+}

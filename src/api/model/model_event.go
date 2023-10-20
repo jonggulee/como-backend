@@ -27,10 +27,10 @@ type Event struct {
 	EndDate string `json:"endDate,omitempty" gorm:"column:end_date;not null"`
 
 	// 이벤트 등록자 ID
-	CreatedUserId int `json:"createdUserId,omitempty" gorm:"column:created_user_id;not null"`
+	CreateUserId int `json:"createUserId,omitempty" gorm:"column:create_user_id;not null"`
 
 	// 이벤트 수정자 ID
-	UpdatedUserId int `json:"updatedUserId,omitempty" gorm:"column:updated_user_id;not null"`
+	UpdateUserId int `json:"updateUserId,omitempty" gorm:"column:update_user_id;not null"`
 
 	// 이벤트 등록 일시
 	CreatedAt time.Time `json:"createdAt,omitempty" gorm:"column:created_at;not null;autoCreateTime"`

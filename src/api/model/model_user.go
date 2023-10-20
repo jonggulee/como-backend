@@ -24,6 +24,9 @@ type User struct {
 	// 2: 이메일로 가입
 	JoinedType int `json:"joinedType,omitempty" gorm:"column:joined_type;not null"`
 
+	// 사용자의 역할
+	Role string `json:"role,omitempty" gorm:"column:role;not null"`
+
 	// 회원 가입 일시
 	CreatedAt time.Time `json:"createdAt,omitempty" gorm:"column:created_at;not null;autoCreateTime"`
 
