@@ -234,7 +234,7 @@ func TokenKakaoLoginUserGet(w http.ResponseWriter, r *http.Request) {
 			if mysqlErr, ok := err.(*mysql.MySQLError); ok && mysqlErr.Number == 1062 {
 				logger.Errorf(reqId, "Duplicate email detected. Attempting to reactivate user... %s", mysqlErr.Message)
 
-				err = dbController.ReactivateUserByEmail(config.AppCtx.Db.Db, reqId, kakaoUser)
+				err = dbController.UserReactivateByEmail(config.AppCtx.Db.Db, reqId, kakaoUser)
 				if err != nil {
 					logger.Errorf(reqId, "Failed to reactivate user... %s", err)
 					resp := newResponse(w, reqId, 500, "Internal Server Error")

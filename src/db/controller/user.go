@@ -79,7 +79,7 @@ func UserSignUp(db *gorm.DB, reqId string, user *model.User) error {
 	return nil
 }
 
-func ReactivateUserByEmail(db *gorm.DB, reqId string, user *model.User) error {
+func UserReactivateByEmail(db *gorm.DB, reqId string, user *model.User) error {
 	logger.Debugf(reqId, "Try to update user set ... %v", user)
 
 	result := db.Table("user").Omit("UpdatedAt").Where("email = ? AND deleted_yn = 1", user.Email).UpdateColumn("deleted_yn", 0)
