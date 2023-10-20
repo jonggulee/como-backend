@@ -79,6 +79,18 @@ func UserSignUp(db *gorm.DB, reqId string, user *model.User) error {
 	return nil
 }
 
+func ReactivateUserByEmail(db *gorm.DB, reqId string, user *model.User) error {
+	logger.Debugf(reqId, "Try to update user set ... %v", user)
+
+	result := db.Table("user").Omit("UpdatedAt").Where("email = ? AND deleted_yn = 1", user.Email).UpdateColumn("deleted_yn", 0)
+	if result.Error != nil {
+		logger.Errorf(reqId, "Failed to delete user set ... %v, %s", user, result.Error)
+		return result.Error
+	}
+
+	return nil
+}
+
 func UserWithdrawUpdate(db *gorm.DB, reqId string, user *model.User) error {
 	logger.Debugf(reqId, "Try to delete user set ... %v", user)
 

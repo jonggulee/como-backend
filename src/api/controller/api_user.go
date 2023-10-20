@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
 	"github.com/gorilla/sessions"
 	"github.com/jonggulee/go-login.git/src/api/model"
@@ -229,10 +230,18 @@ func TokenKakaoLoginUserGet(w http.ResponseWriter, r *http.Request) {
 		// DB에 user 정보 저장
 		err = dbController.UserSignUp(config.AppCtx.Db.Db, reqId, kakaoUser)
 		if err != nil {
-			logger.Errorf(reqId, "Failed to insert into user ... values %v, duo to %s", kakaoUser, err)
-			resp := newResponse(w, reqId, 500, "Internal Server Error")
-			writeResponse(reqId, w, resp)
-			return
+			// 중복되는 email이 있을 경우, 탈퇴한 user로 판단하고 재가입 처리
+			if mysqlErr, ok := err.(*mysql.MySQLError); ok && mysqlErr.Number == 1062 {
+				logger.Errorf(reqId, "Duplicate email detected. Attempting to reactivate user... %s", mysqlErr.Message)
+
+				err = dbController.ReactivateUserByEmail(config.AppCtx.Db.Db, reqId, kakaoUser)
+				if err != nil {
+					logger.Errorf(reqId, "Failed to reactivate user... %s", err)
+					resp := newResponse(w, reqId, 500, "Internal Server Error")
+					writeResponse(reqId, w, resp)
+					return
+				}
+			}
 		}
 
 		user, err = dbController.UserFindByKakaoIdSelect(config.AppCtx.Db.Db, reqId, kakaoUser)
