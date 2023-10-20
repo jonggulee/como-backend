@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func EventListSelect(db *gorm.DB, reqId string) (*[]model.Event, error) {
+func EventSelect(db *gorm.DB, reqId string) (*[]model.Event, error) {
 	logger.Debugf(reqId, "Try to select * from event")
 
 	events := []model.Event{}

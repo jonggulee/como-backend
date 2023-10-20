@@ -29,6 +29,9 @@ type Event struct {
 	// 이벤트 등록자 ID
 	CreatedUserId int `json:"createdUserId,omitempty" gorm:"column:created_user_id;not null"`
 
+	// 이벤트 수정자 ID
+	UpdatedUserId int `json:"updatedUserId,omitempty" gorm:"column:updated_user_id;not null"`
+
 	// 이벤트 등록 일시
 	CreatedAt time.Time `json:"createdAt,omitempty" gorm:"column:created_at;not null;autoCreateTime"`
 

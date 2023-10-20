@@ -9,11 +9,11 @@ import (
 	"github.com/jonggulee/go-login.git/src/logger"
 )
 
-func ListEventGet(w http.ResponseWriter, r *http.Request) {
+func EventGet(w http.ResponseWriter, r *http.Request) {
 	reqId := getRequestId(w, r)
 	logger.Debugf(reqId, "event/list GET started")
 
-	events, err := dbController.EventListSelect(config.AppCtx.Db.Db, reqId)
+	events, err := dbController.EventSelect(config.AppCtx.Db.Db, reqId)
 	if err != nil {
 		logger.Errorf(reqId, "Failed to select from event... %s", err)
 		resp := newResponse(w, reqId, 500, "Internal Server Error")
@@ -21,9 +21,24 @@ func ListEventGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// if len(*events) == 0 {
+	// 	logger.Errorf(reqId, "No event found")
+	// 	resp := newResponse(w, reqId, 404, "No event found")
+	// 	writeResponse(reqId, w, resp)
+	// 	return
+	// }
+
 	resp := newOkResponse(w, reqId, constants.BASICOK)
 	resp.Events = events
 	writeResponse(reqId, w, resp)
+}
 
-	// writeResponse(w, r, ht
+func EventPost(w http.ResponseWriter, r *http.Request) {
+	reqId := getRequestId(w, r)
+	logger.Debugf(reqId, "event POST started")
+
+	// eventReq := &model.EventRequest{}
+
+	resp := newOkResponse(w, reqId, constants.BASICOK)
+	writeResponse(reqId, w, resp)
 }
