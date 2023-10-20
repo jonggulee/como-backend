@@ -13,6 +13,23 @@ import (
 	"github.com/jonggulee/go-login.git/src/utils"
 )
 
+func checkAdminPermission(reqId string, userId int) error {
+	logger.Debugf(reqId, "Try to check permission")
+
+	user, err := dbController.UserDetailSelect(config.AppCtx.Db.Db, reqId, userId)
+	if err != nil {
+		logger.Errorf(reqId, "Failed to select from user... %s", err)
+		return err
+	}
+
+	if user.Role != constants.ADMIN {
+		logger.Errorf(reqId, "User is not admin")
+		return err
+	}
+
+	return nil
+}
+
 func EventGet(w http.ResponseWriter, r *http.Request) {
 	reqId := getRequestId(w, r)
 	logger.Debugf(reqId, "event/list GET started")
@@ -62,6 +79,14 @@ func EventPost(w http.ResponseWriter, r *http.Request) {
 
 	if decodedJwt.Session == "" {
 		logger.Errorf(reqId, "Failed to get session from jwt token")
+		resp := newResponse(w, reqId, 403, "Forbidden")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
+	err = checkAdminPermission(reqId, decodedJwt.UserId)
+	if err != nil {
+		logger.Errorf(reqId, "Failed to check admin permission %s", err)
 		resp := newResponse(w, reqId, 403, "Forbidden")
 		writeResponse(reqId, w, resp)
 		return

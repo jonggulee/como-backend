@@ -50,7 +50,6 @@ func randomState() string {
 	return base64.RawURLEncoding.EncodeToString(b)
 }
 
-// func accessTokenGet(w http.ResponseWriter, r *http.Request, user *model.User) (*model.Token, error) {
 func accessTokenGet(reqId string, user *model.User) (*model.Token, error) {
 	logger.Debugf(reqId, "user/login POST started")
 

@@ -9,4 +9,6 @@ const (
 	BASICOK = "Ok"
 
 	JWTPSK = "como"
+
+	ADMIN = "admin"
 )
