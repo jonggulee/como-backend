@@ -13,7 +13,7 @@ import (
 )
 
 func DecodeJwt(reqId, auth string) (*model.Session, error) {
-	logger.Debugf(reqId, "Start decoding JWT token: %s", auth)
+	logger.Debugf(reqId, "Try to decode JWT token")
 
 	claims := jwt.MapClaims{}
 

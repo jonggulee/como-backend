@@ -50,8 +50,8 @@ func randomState() string {
 	return base64.RawURLEncoding.EncodeToString(b)
 }
 
-func accessTokenGet(reqId string, user *model.User) (*model.Token, error) {
-	logger.Debugf(reqId, "user/login POST started")
+func getAccessToken(reqId string, user *model.User) (*model.Token, error) {
+	logger.Debugf(reqId, "Try to get access token")
 
 	fmt.Println(user)
 
@@ -97,10 +97,8 @@ func accessTokenGet(reqId string, user *model.User) (*model.Token, error) {
 	return loginToken, nil
 }
 
-// func kakaoUserGet(w http.ResponseWriter, r *http.Request, token *model.KakaoToken) (*model.User, error) {
-func kakaoUserGet(reqId string, token *model.KakaoToken) (*model.User, error) {
-	// reqId := getRequestId(w, r)
-	logger.Debugf(reqId, "user/login/kakao/user GET started")
+func getKakaoUser(reqId string, token *model.KakaoToken) (*model.User, error) {
+	logger.Debugf(reqId, "Try to get user info from kakao")
 
 	url := config.KakaoEndpoint.UserURL
 
@@ -209,7 +207,7 @@ func TokenKakaoLoginUserGet(w http.ResponseWriter, r *http.Request) {
 	kakaoToken.Expiry = token.Expiry
 
 	// kakao user 정보 가져오기
-	kakaoUser, err := kakaoUserGet(reqId, kakaoToken)
+	kakaoUser, err := getKakaoUser(reqId, kakaoToken)
 	if err != nil {
 		logger.Errorf(reqId, "Failed to get user info")
 		resp := newResponse(w, reqId, 500, "Internal Server Error")
@@ -252,7 +250,7 @@ func TokenKakaoLoginUserGet(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	accessToken, err := accessTokenGet(reqId, user)
+	accessToken, err := getAccessToken(reqId, user)
 	if err != nil {
 		logger.Errorf(reqId, "Failed to login user %s", err)
 		resp := newResponse(w, reqId, 500, "Internal Server Error")
