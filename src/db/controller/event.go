@@ -31,3 +31,15 @@ func EventCreateInsert(db *gorm.DB, reqId string, event *model.EventCreateReques
 
 	return nil
 }
+
+func EventEditPost(db *gorm.DB, reqId string, eventId int, event *model.EventCreateRequest) error {
+	logger.Debugf(reqId, "Try to update event set ... %v", event)
+
+	result := db.Table("event").Where("id = ?", eventId).Updates(event)
+	if result.Error != nil {
+		logger.Errorf(reqId, "Failed to update event set ... %v", event)
+		return result.Error
+	}
+
+	return nil
+}

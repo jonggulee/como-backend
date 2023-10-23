@@ -2,6 +2,8 @@ package utils
 
 import (
 	"errors"
+	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/dgrijalva/jwt-go"
@@ -61,4 +63,15 @@ func GetKeyFunc() jwt.Keyfunc {
 		}
 		return []byte(constants.JWTPSK), nil
 	}
+}
+
+func GetIntegerFromPathParameters(pathParameters map[string]string, key string) (int, error) {
+	if value, ok := pathParameters[key]; ok {
+		i, err := strconv.Atoi(value)
+		if err != nil {
+			return 0, err
+		}
+		return i, nil
+	}
+	return 0, fmt.Errorf("failed to found %s from path parameters", key)
 }

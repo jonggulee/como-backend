@@ -78,9 +78,15 @@ var routes = Routes{
 		EventGet,
 	},
 	Route{
-		"EventPost",
+		"EventCreatePost",
 		strings.ToUpper("Post"),
 		"/v1/event",
-		EventPost,
+		EventCreatePost,
+	},
+	Route{
+		"EventEditPost",
+		strings.ToUpper("Post"),
+		"/v1/event/edit/{eventId}",
+		EventEditPost,
 	},
 }

@@ -2,9 +2,11 @@ package controller
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gorilla/mux"
 	"github.com/jonggulee/go-login.git/src/api/model"
 	"github.com/jonggulee/go-login.git/src/config"
 	"github.com/jonggulee/go-login.git/src/constants"
@@ -24,7 +26,7 @@ func checkAdminPermission(reqId string, userId int) error {
 
 	if user.Role != constants.ADMIN {
 		logger.Errorf(reqId, "User is not admin")
-		return err
+		return fmt.Errorf("user is not admin")
 	}
 
 	return nil
@@ -47,7 +49,7 @@ func EventGet(w http.ResponseWriter, r *http.Request) {
 	writeResponse(reqId, w, resp)
 }
 
-func EventPost(w http.ResponseWriter, r *http.Request) {
+func EventCreatePost(w http.ResponseWriter, r *http.Request) {
 	reqId := getRequestId(w, r)
 	logger.Debugf(reqId, "event POST started")
 
@@ -107,6 +109,90 @@ func EventPost(w http.ResponseWriter, r *http.Request) {
 	err = dbController.EventCreateInsert(config.AppCtx.Db.Db, reqId, eventReq)
 	if err != nil {
 		logger.Errorf(reqId, "Failed to insert into event... %v, due to %s", eventReq, err)
+		resp := newResponse(w, reqId, 500, "Internal Server Error")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
+	resp := newOkResponse(w, reqId, constants.BASICOK)
+	writeResponse(reqId, w, resp)
+}
+
+func EventEditPost(w http.ResponseWriter, r *http.Request) {
+	reqId := getRequestId(w, r)
+	logger.Debugf(reqId, "event/edit/{eventId} POST started")
+
+	token := r.Header.Get("Authorization")
+	if token == "" {
+		logger.Errorf(reqId, "Failed to get Authorization header")
+		resp := newResponse(w, reqId, 400, "Bad Request")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
+	decodedJwt, err := utils.DecodeJwt(reqId, token)
+	if err != nil {
+		if ve, ok := err.(*jwt.ValidationError); ok {
+			// 토큰 만료 에러 처리
+			if ve.Errors&(jwt.ValidationErrorExpired) != 0 {
+				logger.Errorf(reqId, "Failed to expired or not valid yet")
+				resp := newResponse(w, reqId, 401, "Token Expired")
+				writeResponse(reqId, w, resp)
+				return
+			}
+		}
+
+		logger.Errorf(reqId, "Failed to decode authorization header to jwt token %s", err)
+		resp := newResponse(w, reqId, 500, "Internal error")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
+	if decodedJwt.Session == "" {
+		logger.Errorf(reqId, "Failed to get session from jwt token")
+		resp := newResponse(w, reqId, 403, "Forbidden")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
+	err = checkAdminPermission(reqId, decodedJwt.UserId)
+	if err != nil {
+		logger.Errorf(reqId, "Failed to check admin permission %s", err)
+		resp := newResponse(w, reqId, 403, "Forbidden")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
+	pathParameters := mux.Vars(r)
+	if pathParameters == nil {
+		logger.Errorf(reqId, "Failed to get path parameters")
+		resp := newResponse(w, reqId, 400, "Bad Request")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
+	eventReq := &model.EventCreateRequest{}
+	eventReq.UpdateUserId = decodedJwt.UserId
+
+	err = json.NewDecoder(r.Body).Decode(eventReq)
+	if err != nil {
+		logger.Errorf(reqId, "Failed to decode request body %s", err)
+		resp := newResponse(w, reqId, 400, "Bad Request")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
+	eventId, err := utils.GetIntegerFromPathParameters(pathParameters, "eventId")
+	if err != nil {
+		logger.Errorf(reqId, "Failed to get eventId from path parameters, due to %s", err.Error())
+		resp := newResponse(w, reqId, 400, "Bad Request")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
+	err = dbController.EventEditPost(config.AppCtx.Db.Db, reqId, eventId, eventReq)
+	if err != nil {
+		logger.Errorf(reqId, "Failed to update event... %d, due to %s", eventId, err)
 		resp := newResponse(w, reqId, 500, "Internal Server Error")
 		writeResponse(reqId, w, resp)
 		return
