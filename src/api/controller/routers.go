@@ -86,7 +86,13 @@ var routes = Routes{
 	Route{
 		"EventEditPost",
 		strings.ToUpper("Post"),
-		"/v1/event/edit/{eventId}",
+		"/v1/event/{eventId}",
 		EventEditPost,
+	},
+	Route{
+		"EventDelete",
+		strings.ToUpper("Delete"),
+		"/v1/event/{eventId}",
+		EventDelete,
 	},
 }

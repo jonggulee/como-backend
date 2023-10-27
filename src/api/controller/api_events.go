@@ -184,7 +184,15 @@ func EventEditPost(w http.ResponseWriter, r *http.Request) {
 
 	eventId, err := utils.GetIntegerFromPathParameters(pathParameters, "eventId")
 	if err != nil {
-		logger.Errorf(reqId, "Failed to get eventId from path parameters, due to %s", err.Error())
+		logger.Errorf(reqId, "Failed to get eventId from path parameters, due to %s", err)
+		resp := newResponse(w, reqId, 400, "Bad Request")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
+	err = dbController.EventSelectById(config.AppCtx.Db.Db, reqId, eventId)
+	if err != nil {
+		logger.Errorf(reqId, "Failed to select event by id %d, due to %s", eventId, err)
 		resp := newResponse(w, reqId, 400, "Bad Request")
 		writeResponse(reqId, w, resp)
 		return
@@ -197,6 +205,81 @@ func EventEditPost(w http.ResponseWriter, r *http.Request) {
 		writeResponse(reqId, w, resp)
 		return
 	}
+
+	resp := newOkResponse(w, reqId, constants.BASICOK)
+	writeResponse(reqId, w, resp)
+}
+
+func EventDelete(w http.ResponseWriter, r *http.Request) {
+	reqId := getRequestId(w, r)
+	logger.Debugf(reqId, "event/{eventId} DELETE started")
+
+	token := r.Header.Get("Authorization")
+	if token == "" {
+		logger.Errorf(reqId, "Failed to get Authorization header")
+		resp := newResponse(w, reqId, 400, "Bad Request")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
+	decodedJwt, err := utils.DecodeJwt(reqId, token)
+	if err != nil {
+		if ve, ok := err.(*jwt.ValidationError); ok {
+			// 토큰 만료 에러 처리
+			if ve.Errors&(jwt.ValidationErrorExpired) != 0 {
+				logger.Errorf(reqId, "Failed to expired or not valid yet")
+				resp := newResponse(w, reqId, 401, "Token Expired")
+				writeResponse(reqId, w, resp)
+				return
+			}
+		}
+
+		logger.Errorf(reqId, "Failed to decode authorization header to jwt token %s", err)
+		resp := newResponse(w, reqId, 500, "Internal error")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
+	if decodedJwt.Session == "" {
+		logger.Errorf(reqId, "Failed to get session from jwt token")
+		resp := newResponse(w, reqId, 403, "Forbidden")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
+	err = checkAdminPermission(reqId, decodedJwt.UserId)
+	if err != nil {
+		logger.Errorf(reqId, "Failed to check admin permission %s", err)
+		resp := newResponse(w, reqId, 403, "Forbidden")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
+	pathParameters := mux.Vars(r)
+	if pathParameters == nil {
+		logger.Errorf(reqId, "Failed to get path parameters")
+		resp := newResponse(w, reqId, 400, "Bad Request")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
+	eventId, err := utils.GetIntegerFromPathParameters(pathParameters, "eventId")
+	if err != nil {
+		logger.Errorf(reqId, "Failed to get eventId from path parameters, due to %s", err)
+		resp := newResponse(w, reqId, 400, "Bad Request")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
+	err = dbController.EventSelectById(config.AppCtx.Db.Db, reqId, eventId)
+	if err != nil {
+		logger.Errorf(reqId, "Failed to select event by id %d, due to %s", eventId, err)
+		resp := newResponse(w, reqId, 400, "Bad Request")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
+	err = dbController.EventDelete(config.AppCtx.Db.Db, reqId, eventId, decodedJwt.UserId)
 
 	resp := newOkResponse(w, reqId, constants.BASICOK)
 	writeResponse(reqId, w, resp)
