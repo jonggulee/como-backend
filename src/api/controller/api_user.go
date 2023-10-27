@@ -393,9 +393,9 @@ func DetailUserPost(w http.ResponseWriter, r *http.Request) {
 	writeResponse(reqId, w, resp)
 }
 
-func WithdrawUserPost(w http.ResponseWriter, r *http.Request) {
+func WithdrawUserDelete(w http.ResponseWriter, r *http.Request) {
 	reqId := getRequestId(w, r)
-	logger.Debugf(reqId, "user/withdraw POST started")
+	logger.Debugf(reqId, "user/withdraw DELETE started")
 
 	token := r.Header.Get("Authorization")
 	if token == "" {
@@ -446,7 +446,7 @@ func WithdrawUserPost(w http.ResponseWriter, r *http.Request) {
 
 	user.DeletedYn = 1
 
-	err = dbController.UserWithdrawUpdate(config.AppCtx.Db.Db, reqId, user)
+	err = dbController.UserWithdrawDelete(config.AppCtx.Db.Db, reqId, user)
 	if err != nil {
 		logger.Errorf(reqId, "Failed to update user ... %v, due to %s", user, err)
 		resp := newResponse(w, reqId, 500, "Internal Server Error")

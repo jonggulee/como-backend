@@ -91,7 +91,7 @@ func UserReactivateByEmail(db *gorm.DB, reqId string, user *model.User) error {
 	return nil
 }
 
-func UserWithdrawUpdate(db *gorm.DB, reqId string, user *model.User) error {
+func UserWithdrawDelete(db *gorm.DB, reqId string, user *model.User) error {
 	logger.Debugf(reqId, "Try to delete user set ... %v", user)
 
 	result := db.Table("user").Omit("UpdatedAt").Where("deleted_yn = 0").Updates(user)

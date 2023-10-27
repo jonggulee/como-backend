@@ -280,6 +280,12 @@ func EventDelete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = dbController.EventDelete(config.AppCtx.Db.Db, reqId, eventId, decodedJwt.UserId)
+	if err != nil {
+		logger.Errorf(reqId, "Failed to delete event... %d, due to %s", eventId, err)
+		resp := newResponse(w, reqId, 500, "Internal Server Error")
+		writeResponse(reqId, w, resp)
+		return
+	}
 
 	resp := newOkResponse(w, reqId, constants.BASICOK)
 	writeResponse(reqId, w, resp)

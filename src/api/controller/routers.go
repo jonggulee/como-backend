@@ -66,10 +66,10 @@ var routes = Routes{
 		DetailUserPost,
 	},
 	Route{
-		"WithdrawUserPost",
-		strings.ToUpper("Post"),
+		"WithdrawUserDelete",
+		strings.ToUpper("Delete"),
 		"/v1/user/withdraw",
-		WithdrawUserPost,
+		WithdrawUserDelete,
 	},
 	Route{
 		"EventGet",
