@@ -53,6 +53,18 @@ func SessionSelectByUserId(db *gorm.DB, reqId string, userId int) (*model.Sessio
 	return sessionInfo, nil
 }
 
+func SessionDelete(db *gorm.DB, reqId string, sessionId string) error {
+	logger.Debugf(reqId, "Try to delete from session where session = %s", sessionId)
+
+	result := db.Table("session").Where("session = ?", sessionId).Update("deleted_yn", 1)
+	if result.Error != nil {
+		logger.Errorf(reqId, "Failed to delete from session where session = %s", sessionId)
+		return result.Error
+	}
+
+	return nil
+}
+
 func UserDetailSelect(db *gorm.DB, reqId string, userId int) (*model.User, error) {
 	logger.Debugf(reqId, "Try to select * from user where id = %d", userId)
 

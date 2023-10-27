@@ -466,6 +466,14 @@ func WithdrawUserDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = dbController.SessionDelete(config.AppCtx.Db.Db, reqId, decodedJwt.Session)
+	if err != nil {
+		logger.Errorf(reqId, "Failed to delete session ... %s, due to %s", decodedJwt.Session, err)
+		resp := newResponse(w, reqId, 500, "Internal Server Error")
+		writeResponse(reqId, w, resp)
+		return
+	}
+
 	resp := newOkResponse(w, reqId, constants.BASICOK)
 	writeResponse(reqId, w, resp)
 }
