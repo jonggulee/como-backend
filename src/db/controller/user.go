@@ -36,6 +36,23 @@ func SessionSelect(db *gorm.DB, reqId, session string) (*model.Session, error) {
 	return sessionInfo, nil
 }
 
+func SessionSelectByUserId(db *gorm.DB, reqId string, userId int) (*model.Session, error) {
+	logger.Debugf(reqId, "Try to select * from session where user_id = %d", userId)
+
+	sessionInfo := &model.Session{}
+
+	result := db.Table("session").
+		Where("session.user_id = ? AND session.deleted_yn = 0", userId).
+		Find(sessionInfo)
+
+	if result.Error != nil {
+		logger.Errorf(reqId, "Failed to select * from session where user_id = %d", userId)
+		return nil, result.Error
+	}
+
+	return sessionInfo, nil
+}
+
 func UserDetailSelect(db *gorm.DB, reqId string, userId int) (*model.User, error) {
 	logger.Debugf(reqId, "Try to select * from user where id = %d", userId)
 

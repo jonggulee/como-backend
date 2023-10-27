@@ -53,24 +53,36 @@ func randomState() string {
 func getAccessToken(reqId string, user *model.User) (*model.Token, error) {
 	logger.Debugf(reqId, "Try to get access token")
 
-	fmt.Println(user)
-
 	if user == nil {
 		logger.Errorf(reqId, "Failed to get user")
 		return nil, fmt.Errorf("failed to get user")
 	}
 
-	// 세션 발급
-	session := &model.SessionRequest{}
-	userSession := uuid.New().String()
-	session.UserId = user.Id
-	session.UserEmail = user.Email
-	session.Session = userSession
-
-	err := dbController.SessionInsert(config.AppCtx.Db.Db, reqId, session)
+	// 기존 세션 조회
+	sessionInfo, err := dbController.SessionSelectByUserId(config.AppCtx.Db.Db, reqId, user.Id)
 	if err != nil {
-		logger.Errorf(reqId, "Failed to insert into session ... values %v, duo to %s", session, err)
+		logger.Errorf(reqId, "Failed to select session by user id %d, due to %s", user.Id, err)
 		return nil, err
+	}
+
+	// 기존 세션 정보가 없다면 세션 발급
+	var userSession string
+	if sessionInfo.Id == 0 {
+		// 신규 세션 발급
+		session := &model.SessionRequest{}
+		userSession = uuid.New().String()
+		session.UserId = user.Id
+		session.UserEmail = user.Email
+		session.Session = userSession
+
+		err := dbController.SessionInsert(config.AppCtx.Db.Db, reqId, session)
+		if err != nil {
+			logger.Errorf(reqId, "Failed to insert into session ... values %v, duo to %s", session, err)
+			return nil, err
+		}
+	} else {
+		// 기존 세션 재활용
+		userSession = sessionInfo.Session
 	}
 
 	// access token 발급
