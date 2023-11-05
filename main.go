@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/jonggulee/go-login.git/src/app"
+	"github.com/jonggulee/como-backend/src/app"
 )
 
 func main() {

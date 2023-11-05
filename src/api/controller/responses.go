@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/jonggulee/go-login.git/src/api/model"
-	"github.com/jonggulee/go-login.git/src/logger"
+	"github.com/jonggulee/como-backend/src/api/model"
+	"github.com/jonggulee/como-backend/src/logger"
 )
 
 func addCommonHeaders(w http.ResponseWriter) {

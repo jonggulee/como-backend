@@ -13,12 +13,12 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
 	"github.com/gorilla/sessions"
-	"github.com/jonggulee/go-login.git/src/api/model"
-	"github.com/jonggulee/go-login.git/src/config"
-	"github.com/jonggulee/go-login.git/src/constants"
-	dbController "github.com/jonggulee/go-login.git/src/db/controller"
-	"github.com/jonggulee/go-login.git/src/logger"
-	"github.com/jonggulee/go-login.git/src/utils"
+	"github.com/jonggulee/como-backend/src/api/model"
+	"github.com/jonggulee/como-backend/src/config"
+	"github.com/jonggulee/como-backend/src/constants"
+	dbController "github.com/jonggulee/como-backend/src/db/controller"
+	"github.com/jonggulee/como-backend/src/logger"
+	"github.com/jonggulee/como-backend/src/utils"
 	"golang.org/x/oauth2"
 )
 

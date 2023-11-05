@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/jonggulee/go-login.git/src/api/controller"
-	"github.com/jonggulee/go-login.git/src/config"
-	"github.com/jonggulee/go-login.git/src/constants"
-	dbController "github.com/jonggulee/go-login.git/src/db/controller"
-	"github.com/jonggulee/go-login.git/src/logger"
+	"github.com/jonggulee/como-backend/src/api/controller"
+	"github.com/jonggulee/como-backend/src/config"
+	"github.com/jonggulee/como-backend/src/constants"
+	dbController "github.com/jonggulee/como-backend/src/db/controller"
+	"github.com/jonggulee/como-backend/src/logger"
 	"github.com/urfave/cli/v2"
 )
 

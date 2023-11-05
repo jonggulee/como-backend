@@ -1,7 +1,7 @@
 package config
 
 import (
-	dbModel "github.com/jonggulee/go-login.git/src/db/model"
+	dbModel "github.com/jonggulee/como-backend/src/db/model"
 )
 
 type Ctx struct {

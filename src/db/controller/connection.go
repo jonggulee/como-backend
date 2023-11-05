@@ -6,9 +6,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/jonggulee/go-login.git/src/constants"
-	"github.com/jonggulee/go-login.git/src/db/model"
-	"github.com/jonggulee/go-login.git/src/logger"
+	"github.com/jonggulee/como-backend/src/constants"
+	"github.com/jonggulee/como-backend/src/db/model"
+	"github.com/jonggulee/como-backend/src/logger"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	gormLogger "gorm.io/gorm/logger"

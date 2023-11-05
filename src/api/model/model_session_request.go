@@ -1,8 +1,8 @@
 package model
 
 import (
-	"github.com/jonggulee/go-login.git/src/constants"
-	"github.com/jonggulee/go-login.git/src/logger"
+	"github.com/jonggulee/como-backend/src/constants"
+	"github.com/jonggulee/como-backend/src/logger"
 	"gorm.io/gorm"
 )
 

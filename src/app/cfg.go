@@ -5,9 +5,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/jonggulee/go-login.git/src/config"
-	"github.com/jonggulee/go-login.git/src/constants"
-	"github.com/jonggulee/go-login.git/src/logger"
+	"github.com/jonggulee/como-backend/src/config"
+	"github.com/jonggulee/como-backend/src/constants"
+	"github.com/jonggulee/como-backend/src/logger"
 	"github.com/urfave/cli/v2"
 )
 

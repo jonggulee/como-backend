@@ -1,8 +1,8 @@
 package controller
 
 import (
-	"github.com/jonggulee/go-login.git/src/api/model"
-	"github.com/jonggulee/go-login.git/src/logger"
+	"github.com/jonggulee/como-backend/src/api/model"
+	"github.com/jonggulee/como-backend/src/logger"
 	"gorm.io/gorm"
 )
 
